@@ -5,13 +5,18 @@ output: html_document
 
 
 ```{r}
-library(dslabs)
 library(tidyverse)
 library(ggplot2)
+library(rvest)
+
 ```
 
 ```{r}
 # import datasets
+install.packages("gsheet")
+library(gsheet)
+url20 <- "https://docs.google.com/spreadsheets/d/1vkHkvnZFhtekjkYbF-y7uVo4oE36ROaqJx4lxVIkdq4/edit?usp=sharing"
+dat20 <- read.csv(text=gsheet2text(url,format='csv'),stringsAsFactors=FALSE)
 
 ```
 
