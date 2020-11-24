@@ -8,7 +8,7 @@ output: html_document
 library(tidyverse)
 library(ggplot2)
 library(rvest)
-
+library(maps)
 ```
 
 ```{r}
@@ -16,7 +16,8 @@ library(rvest)
 install.packages("gsheet")
 library(gsheet)
 url20 <- "https://docs.google.com/spreadsheets/d/1vkHkvnZFhtekjkYbF-y7uVo4oE36ROaqJx4lxVIkdq4/edit?usp=sharing"
-dat20 <- read.csv(text=gsheet2text(url,format='csv'),stringsAsFactors=FALSE)
+dat20 <- gsheet2tbl(url20, sheetid = NULL)
+
 
 ```
 
@@ -27,8 +28,42 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+```{r}
+world_map = map_data("world")
+
+dat20[is.na(match(dat20$`Country name`, world_map$region)), ]
+
+dat20 <- dat20 %>%
+  mutate(new_names = recode(`Country name`,
+    "United Kingdom" = "UK",
+    "United States" = "USA",
+    "Taiwan Province of China" = "Taiwan",
+    "Trinidad and Tobago" = "Trinidad",
+    "North Cyprus" = "Cyprus",
+    "Hong Kong S.A.R. of China" = "Hong Kong",
+    "Palestinian Territories" = "Palestine",
+    "Congo (Brazzaville)" = "Democratic Republic of the Congo"
+  )
+  )
+
+world_map <- within(world_map, region[region == "China" & subregion == "Hong Kong"] <- "Hong Kong")
+
+world_map <- world_map %>%
+  rename("Country" = region)
+
+dat20 <- dat20 %>%
+  rename("Country" = `Country name`)
+
+combined_countries <- full_join(dat20, world_map)
+
+# Basic example of a map
+    ggplot(world_map, aes(x = long, y = lat, group = group)) +
+      geom_polygon(fill="gray", color = "white") + 
+      theme(panel.grid.major = element_blank(), 
+            panel.background = element_blank(),
+            axis.title = element_blank(), 
+            axis.text = element_blank(),
+            axis.ticks = element_blank())
 ```
 
 ## Including Plots
