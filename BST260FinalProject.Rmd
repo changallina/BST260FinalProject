@@ -31,7 +31,7 @@ When you click the **Knit** button a document will be generated that includes bo
 ```{r}
 world_map = map_data("world")
 
-dat20[is.na(match(dat20$`Country name`, world_map$region)), ]
+#dat20[is.na(match(dat20$`Country name`, world_map$region)), ]
 
 dat20 <- dat20 %>%
   mutate(new_names = recode(`Country name`,
@@ -52,18 +52,19 @@ world_map <- world_map %>%
   rename("Country" = region)
 
 dat20 <- dat20 %>%
-  rename("Country" = `Country name`)
+  rename("Country" = new_names)
 
 combined_countries <- full_join(dat20, world_map)
 
-# Basic example of a map
-    ggplot(world_map, aes(x = long, y = lat, group = group)) +
-      geom_polygon(fill="gray", color = "white") + 
-      theme(panel.grid.major = element_blank(), 
-            panel.background = element_blank(),
-            axis.title = element_blank(), 
-            axis.text = element_blank(),
-            axis.ticks = element_blank())
+ggplot(combined_countries, 
+       aes(x = long, y = lat, group = group, fill = combined_countries$`Ladder score`)) +
+  geom_polygon() +
+  scale_fill_viridis_c() +
+  theme(panel.grid.major = element_blank(), 
+        panel.background = element_blank(),
+        axis.title = element_blank(), 
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
 ```
 
 ## Including Plots
