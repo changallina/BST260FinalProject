@@ -18,7 +18,9 @@ library(gsheet)
 url20 <- "https://docs.google.com/spreadsheets/d/1vkHkvnZFhtekjkYbF-y7uVo4oE36ROaqJx4lxVIkdq4/edit?usp=sharing"
 dat20 <- gsheet2tbl(url20, sheetid = NULL)
 
-
+#shiny
+dat2_1 <- "https://docs.google.com/spreadsheets/d/1bAzkkXU3W7LALAzP2cnaahbf-s52kr8GvjJ3pIaK9Cs/edit?usp=sharing"
+whr2_1 <- gsheet2tbl(dat2_1, sheetid = NULL)
 ```
 
 
@@ -71,8 +73,12 @@ ggplot(combined_countries,
 
 You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+whr2_1$year <- as.Date(whr2_1$year)
+whr2_1 %>% filter (`Country name` == "Afghanistan") %>% 
+  ggplot(aes(x = year, y = `Life Ladder`, color = `Country name`)) +
+    geom_line() +
+    scale_x_continuous(breaks = c(2007, 2020))
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
