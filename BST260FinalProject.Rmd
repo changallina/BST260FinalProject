@@ -58,15 +58,53 @@ dat20 <- dat20 %>%
 
 combined_countries <- full_join(dat20, world_map)
 
-ggplot(combined_countries, 
-       aes(x = long, y = lat, group = group, fill = combined_countries$`Ladder score`)) +
-  geom_polygon() +
-  scale_fill_viridis_c() +
+
+combined_countries <- combined_countries %>% mutate(manual_fill = cut(`Ladder score`, 
+                         breaks = c(-Inf, 1, 2, 3, 4, 5, 6, 7, Inf),
+                         labels = c("<1", "1-2", "2-3", "3-4", 
+                                    "4-5", "5-6", "6-7", ">7"), 
+                         right = TRUE))
+```
+
+
+```{r}
+library(sf)
+library(ggrepel)
+library(ggspatial)
+
+#happiest countries in each continent (do we want to label happiest + least happiest country in each continent?)
+topcities <- data.frame(Country = c("Taiwan", "Australia", "Mauritius", "Chile", "Canada", "Finland"), 
+    lat = c(24.52212, -43.23242, -20.48486, -55.88965, 43.93960, 60.04068), 
+    lng = c(118.4074, 147.3488, 57.65127, -67.57520, -59.78760, 20.61133))
+
+(topcities <- st_as_sf(topcities, coords = c("lng", "lat"), remove = FALSE, 
+    crs = 4326, agr = "constant"))
+
+ggplot() +
+  geom_polygon(combined_countries, mapping = aes(x = long, y = lat, group = group, fill = manual_fill)) +
+  geom_text_repel(data = topcities, aes(x = lng, y = lat, label = Country), 
+                  size = 3, 
+                  fontface = "bold",
+                  nudge_x = c(5, -1.5, 2, 8, 0, -1),
+                  nudge_y = c(0.25, -0.25, 0.75, 0.75, -0.5, -0.5)) +
+  #need to play around with nudge to align properly. also can't figure out how to draw a line from label to the dot
+  geom_sf(data = topcities, alpha = 0.5, size = 0.5, color = "blue") +
+  ggtitle("Happiness Levels Across the World in 2019") +
+  scale_fill_manual(name = "Cantrill Ladder Score", 
+                     values = c("lightcyan", 
+                                "lightskyblue2",
+                                "dodgerblue3", 
+                                "dodgerblue4",
+                                "darkgoldenrod2",
+                                "gold1")) +
+  theme(legend.position = "bottom") +
+  guides(shape = guide_legend(override.aes = list(size = 5))) +
   theme(panel.grid.major = element_blank(), 
         panel.background = element_blank(),
         axis.title = element_blank(), 
         axis.text = element_blank(),
-        axis.ticks = element_blank())
+        axis.ticks.y = element_blank(),
+        axis.line.y = element_blank())
 ```
 
 ## Including Plots
