@@ -74,8 +74,8 @@ library(ggspatial)
 
 #happiest countries in each continent (do we want to label happiest + least happiest country in each continent?)
 topcities <- data.frame(Country = c("Taiwan", "Australia", "Mauritius", "Chile", "Canada", "Finland"), 
-    lat = c(24.52212, -43.23242, -20.48486, -55.88965, 43.93960, 60.04068), 
-    lng = c(118.4074, 147.3488, 57.65127, -67.57520, -59.78760, 20.61133))
+    lat = c(23.6978, -43.23242, -20.48486, -33.447487, 56.1394, 60.04068), 
+    lng = c(120.9605, 147.3488, 57.65127, -70.673676, -106.3468, 20.61133))
 
 (topcities <- st_as_sf(topcities, coords = c("lng", "lat"), remove = FALSE, 
     crs = 4326, agr = "constant"))
@@ -83,10 +83,12 @@ topcities <- data.frame(Country = c("Taiwan", "Australia", "Mauritius", "Chile",
 ggplot() +
   geom_polygon(combined_countries, mapping = aes(x = long, y = lat, group = group, fill = manual_fill)) +
   geom_text_repel(data = topcities, aes(x = lng, y = lat, label = Country), 
-                  size = 3, 
+                  size = 3,
+                  color = "orange",
                   fontface = "bold",
-                  nudge_x = c(5, -1.5, 2, 8, 0, -1),
-                  nudge_y = c(0.25, -0.25, 0.75, 0.75, -0.5, -0.5)) +
+                  nudge_x = c(25, -1.5, 15, -13, -40, -16),
+                  nudge_y = c(-5, -15, 10, 3, -7, 13),
+                  min.segment.length = unit(0, "lines")) +
   #need to play around with nudge to align properly. also can't figure out how to draw a line from label to the dot
   geom_sf(data = topcities, alpha = 0.5, size = 0.5, color = "blue") +
   ggtitle("Happiness Levels Across the World in 2019") +
