@@ -1,0 +1,56 @@
+---
+title: "BST260WHR project"
+author: "Sung-An Tai"
+date: "2020/11/27"
+output: html_document
+---
+```{r}
+library(tidyverse)
+library(readxl) 
+
+# Read WHR20_DataForFigure2.1.xls (2017~2019 average) and WHR20_DataForTable2.1.xls (2008~2019 with additional variables)
+# Main dependent variable: Ladder score, independent variable: `Logged GDP per capita`+`Social support`+`Healthy life expectancy`+`Freedom to make life choices`+`Generosity`+`Perceptions of corruption`
+whr20 <- read_xls("C:/Users/andyt/Desktop/WHR20_DataForFigure2.1.xls")
+whr_all <- read_xls("C:/Users/andyt/Desktop/WHR20_DataForTable2.1.xls")
+names(whr20)
+
+# Main model for fig 2.1 in the WHR 2020 report, but they used pooled OLS regression specific for panel analysis, rather than plain multiple regression
+mod1 <- lm(`Ladder score` ~ `Logged GDP per capita`+
+             `Social support`+`Healthy life expectancy`+
+             `Freedom to make life choices`+
+             `Generosity`+
+             `Perceptions of corruption`,
+           data = whr20)
+summary(mod1)
+
+# Model for 2019 only
+whr19 <- whr_all %>% filter(year == 2019)
+mod_19 <- lm(`Life Ladder` ~ `Log GDP per capita`+
+             `Social support`+`Healthy life expectancy at birth`+
+             `Freedom to make life choices`+
+             `Generosity`+
+             `Perceptions of corruption`,
+           data = whr19)
+
+summary(mod_19)
+
+# backward selection for 2017~2019 model and 2019 model
+mod1_bkwd <- step(mod1, direction = "backward")
+summary(mod1_bkwd)
+
+no.na.whr19 <- na.omit(whr19 %>% select(`Life Ladder`, `Log GDP per capita`,
+             `Social support`, `Healthy life expectancy at birth`,
+             `Freedom to make life choices`,
+             `Generosity`,
+             `Perceptions of corruption`))
+mod_19_noNA <- lm(`Life Ladder` ~ `Log GDP per capita`+
+             `Social support`+`Healthy life expectancy at birth`+
+             `Freedom to make life choices`+
+             `Generosity`+
+             `Perceptions of corruption`,
+           data = no.na.whr19)
+mod_19_bckwd <- step(mod_19_noNA, direction = "backward")
+s_19 <- summary(mod_19_bckwd)
+
+```
+

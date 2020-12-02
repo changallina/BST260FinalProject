@@ -52,30 +52,31 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
     
-    whrdat <- reactive({
-        whr2_1 %>% filter(`Country name` %in% input$selectizeCountry)
-    })
-    
     output$plot <- renderPlot({
-            ggplot(whrdat(), aes(x = year, y = `Life ladder`, color = `Country name`)) +
-                geom_line() +
+            whr2_1 %>% filter(`Country name` %in% c(input$selectizeCountry)) %>% 
+            ggplot(aes(x = year, y = `Life Ladder`)) +
+                geom_line(aes(color = `Country name`)) +
                 ylab("Cantril Ladder") +
-                ggtitle(sprintf("Happiness in %s"), input$selectizeCountry) +
+                ggtitle("Happiness") +
                 scale_color_discrete(name = "Country") +
-                theme(axis.text.x = element_text(angle = 70, hjust =1))
+                theme(axis.text.x = element_text(angle = 70, hjust =1)) +
+                scale_x_continuous(breaks = seq(2005, 2019, by = 1)) +
+                xlab("Year")
         
     }) #renderPlot
     
     
-        #TO DO - change Generosity to input$variables
-    # output$plot2 <- renderPlot({
-    #     ggplot(whrdat(), aes(x = year, y = Generosity, color = `Country name`)) +
-    #     geom_line() +
-    #     xlab("Year") +
-    #     ylab(sprintf("%s", input$variables) +
-    #     ggtitle(sprintf("%s Across Different Countries", input$variables) +
-    #     scale_color_discrete(name = "Country")
-    # }) #renderPlot
+    #TO DO - change Generosity to input$variables
+    output$plot2 <- renderPlot({
+        whr2_1 %>% filter(`Country name` %in% c(input$selectizeCountry)) %>% 
+        ggplot(aes_string(x = "year", y = input$variables)) +
+        scale_x_continuous(breaks = seq(2005, 2019, by = 1)) +
+        geom_line(aes(color = `Country name`)) +
+        xlab("Year") +
+        ylab(sprintf("%s", input$variables)) +
+        ggtitle(sprintf("%s Across Different Countries", input$variables)) +
+        scale_color_discrete(name = "Country")
+    }) #renderPlot
 }
 
 # Run the application 
