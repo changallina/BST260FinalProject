@@ -15,6 +15,7 @@ library(maps)
 # import datasets
 install.packages("gsheet")
 library(gsheet)
+#spreadsheet of data pulled from 2020 world happiness report (data for figure 2.1 in the report) 
 url20 <- "https://docs.google.com/spreadsheets/d/1vkHkvnZFhtekjkYbF-y7uVo4oE36ROaqJx4lxVIkdq4/edit?usp=sharing"
 dat20 <- gsheet2tbl(url20, sheetid = NULL)
 
