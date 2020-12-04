@@ -34,10 +34,10 @@ ui <- fluidPage(
                  sidebarPanel(
                      radioButtons(inputId = "variables", 
                                   label = "Select a variable to display",
-                                  choices = c("Social support", 
-                                              "Life expectancy", 
-                                              "Generosity", 
-                                              "Perceptions of corruption")
+                                  choices = c(`Social support` = "'Social support'", 
+                                              `Life expectancy` = "`Healthy life expectancy at birth`", 
+                                              Generosity = "Generosity", 
+                                              `Perceptions of corruption` = "`Perceptions of corruption`")
                      ) #radioButtons
                  ), #sidebarPanel
                  
@@ -75,6 +75,8 @@ server <- function(input, output) {
         xlab("Year") +
         ylab(sprintf("%s", input$variables)) +
         ggtitle(sprintf("%s Across Different Countries", input$variables)) +
+        # ggtitle(paste(str_remove(toString(input$variables), "(`|`|'|')")),
+        #         "Across Different Countries") +
         scale_color_discrete(name = "Country")
     }) #renderPlot
 }

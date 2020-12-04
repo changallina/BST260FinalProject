@@ -107,7 +107,8 @@ ggplot() +
                                 "darkgoldenrod2",
                                 "salmon3"),
                     na.value = "gray") +
-  theme(legend.position = "bottom") +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size = 7)) +
   guides(shape = guide_legend(override.aes = list(size = 5))) +
   theme(panel.grid.major = element_blank(), 
         panel.background = element_blank(),
