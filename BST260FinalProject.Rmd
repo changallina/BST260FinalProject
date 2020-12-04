@@ -13,7 +13,6 @@ library(maps)
 
 ```{r}
 # import datasets
-install.packages("gsheet")
 library(gsheet)
 #spreadsheet of data pulled from 2020 world happiness report (data for figure 2.1 in the report) 
 url20 <- "https://docs.google.com/spreadsheets/d/1vkHkvnZFhtekjkYbF-y7uVo4oE36ROaqJx4lxVIkdq4/edit?usp=sharing"
@@ -25,11 +24,6 @@ whr2_1 <- gsheet2tbl(dat2_1, sheetid = NULL)
 ```
 
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r}
 world_map = map_data("world")
@@ -52,7 +46,9 @@ dat20 <- dat20 %>%
 world_map <- within(world_map, region[region == "China" & subregion == "Hong Kong"] <- "Hong Kong")
 
 world_map <- world_map %>%
+  filter(region != "Antarctica") %>% 
   rename("Country" = region)
+
 
 dat20 <- dat20 %>%
   rename("Country" = new_names)
@@ -67,6 +63,10 @@ combined_countries <- combined_countries %>% mutate(manual_fill = cut(`Ladder sc
                                     "(6.5, 7]", "(7, 7.5]", "(7.5, 8]", ">8"), 
                          right = TRUE))
 ```
+```{r}
+whr2_1 <- whr2_1 %>% rename(GDP = `Log GDP per capita`,
+                            LifeExpectancy = `Healthy life expectancy at birth`)
+```
 
 
 ```{r}
@@ -74,40 +74,50 @@ library(sf)
 library(ggrepel)
 library(ggspatial)
 
-#happiest countries in each continent (do we want to label happiest + least happiest country in each continent?)
 topcities <- data.frame(Country = c("Taiwan", "Australia", "Mauritius", "Chile", "Canada", "Finland"), 
     lat = c(23.6978, -43.23242, -20.48486, -33.447487, 56.1394, 60.04068), 
-    lng = c(120.9605, 147.3488, 57.65127, -70.673676, -106.3468, 20.61133))
+    lng = c(120.9605, 147.3488, 57.65127, -70.673676, -106.3468, 20.61133),
+    level = c("happiest", "happiest", "happiest", "happiest", "happiest", "happiest"))
 
 (topcities <- st_as_sf(topcities, coords = c("lng", "lat"), remove = FALSE, 
     crs = 4326, agr = "constant"))
 
+lowcities <- data.frame(Country = c("Venezuela", "Haiti", "South Sudan", "Ukraine", "India"), 
+    lat = c(6.4238, 18.9715, 6.8770, 48.3794, 20.5937), 
+    lng = c(66.5897, 72.2852, 31.3070, 31.1656, 78.9629),
+    level = c("saddest", "saddest", "saddest", "saddest", "saddest"))
+
+(lowcities <- st_as_sf(lowcities, coords = c("lng", "lat"), remove = FALSE, 
+    crs = 4326, agr = "constant"))
+
+mostleast <- rbind(topcities, lowcities)
+
 ggplot() +
   geom_polygon(combined_countries, mapping = aes(x = long, y = lat, group = group, fill = manual_fill)) +
-  geom_text_repel(data = topcities, aes(x = lng, y = lat, label = Country), 
+  geom_text_repel(data = mostleast, aes(x = lng, y = lat, label = Country, color = level), 
                   size = 3,
-                  color = "orange",
                   fontface = "bold",
                   nudge_x = c(25, -1.5, 15, -13, -40, -16),
                   nudge_y = c(-5, -15, 10, 3, -7, 13),
                   min.segment.length = unit(0, "lines")) +
-  #need to play around with nudge to align properly. also can't figure out how to draw a line from label to the dot
-  geom_sf(data = topcities, alpha = 0.5, size = 0.5, color = "blue") +
+  geom_sf(data = topcities, alpha = 0.5, size = 0.5, color = "salmon3") +
+  geom_sf(data = lowcities, alpha = 0.5, size = 0.5, color = "dodgerblue4") +
   ggtitle("Happiness Levels Across the World in 2019") +
   scale_fill_manual(name = "Cantrill Ladder Score", 
-                     values = c("mintcream",
-                                "honeydew2",
-                                "lightcyan3", 
-                                "lightskyblue2",
+                     values = c("dodgerblue4",
                                 "dodgerblue3", 
-                                "dodgerblue4",
-                                "peachpuff2",
-                                "palegoldenrod",
+                                "lightskyblue2",
+                                "paleturquoise3",
+                                "lightcyan3",
+                                "honeydew2",
+                                "khaki1",
                                 "gold1",
+                                "goldenrod1",
                                 "darkgoldenrod2",
                                 "salmon3"),
                     na.value = "gray") +
   theme(legend.position = "bottom",
+        legend.title = element_text(size = 8),
         legend.text = element_text(size = 7)) +
   guides(shape = guide_legend(override.aes = list(size = 5))) +
   theme(panel.grid.major = element_blank(), 
@@ -118,9 +128,6 @@ ggplot() +
         axis.line.y = element_blank())
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
 
 ```{r}
 whr2_1$year <- as.Date(whr2_1$year)

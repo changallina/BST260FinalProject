@@ -4,9 +4,17 @@ library(tidyverse)
 library(lubridate)
 library(ggplot2)
 
+#todo: 
+#set default country
+#fix spacing of sidebar panel in second tab
+
 #Import Data Table 2.1 from WHR 2020
 dat2_1 <- "https://docs.google.com/spreadsheets/d/1bAzkkXU3W7LALAzP2cnaahbf-s52kr8GvjJ3pIaK9Cs/edit?usp=sharing"
 whr2_1 <- gsheet2tbl(dat2_1, sheetid = NULL)
+
+#Data wrangling
+whr2_1 <- whr2_1 %>% rename(GDP = `Log GDP per capita`,
+                            LifeExpectancy = `Healthy life expectancy at birth`)
 
 # Define UI 
 ui <- fluidPage(
@@ -32,10 +40,19 @@ ui <- fluidPage(
         tabPanel("World Dynamics of Other Variables",
              sidebarLayout(
                  sidebarPanel(
+                   sidebarPanel(
+                     # Select up to 6 countries
+                     selectizeInput(inputId = "selectizeCountry2", 
+                                    label = "Choose up to 3 countries",
+                                    choices = unique(whr2_1) %>% select(`Country name`),
+                                    options = list(maxItems = 3, placeholder = 'Select a country name')
+                     ), #selectizeInput
+                   ), #sidebarPanel
+                   
                      radioButtons(inputId = "variables", 
                                   label = "Select a variable to display",
-                                  choices = c(`Social support` = "'Social support'", 
-                                              `Life expectancy` = "`Healthy life expectancy at birth`", 
+                                  choices = c(GDP = "GDP", 
+                                              `Life Expectancy` = "LifeExpectancy", 
                                               Generosity = "Generosity", 
                                               `Perceptions of corruption` = "`Perceptions of corruption`")
                      ) #radioButtons
@@ -65,15 +82,12 @@ server <- function(input, output) {
         
     }) #renderPlot
     
-    
-    #TO DO - change Generosity to input$variables
     output$plot2 <- renderPlot({
-        whr2_1 %>% filter(`Country name` %in% c(input$selectizeCountry)) %>% 
-        ggplot(aes_string(x = "year", y = input$variables)) +
-        scale_x_continuous(breaks = seq(2005, 2019, by = 1)) +
-        geom_line(aes(color = `Country name`)) +
-        xlab("Year") +
-        ylab(sprintf("%s", input$variables)) +
+        whr2_1 %>% filter(`Country name` %in% c(input$selectizeCountry2)) %>% 
+        ggplot(aes_string(x = input$variables, y = "`Life Ladder`")) +
+        geom_point(aes(color = `Country name`)) +
+        ylab("Happiness Ladder Score") +
+        xlab(sprintf("%s", input$variables)) +
         ggtitle(sprintf("%s Across Different Countries", input$variables)) +
         # ggtitle(paste(str_remove(toString(input$variables), "(`|`|'|')")),
         #         "Across Different Countries") +
