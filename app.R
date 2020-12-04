@@ -5,8 +5,7 @@ library(lubridate)
 library(ggplot2)
 
 #todo: 
-#set default country
-#fix spacing of sidebar panel in second tab
+#fit gray background for tab 2
 
 #Import Data Table 2.1 from WHR 2020
 dat2_1 <- "https://docs.google.com/spreadsheets/d/1bAzkkXU3W7LALAzP2cnaahbf-s52kr8GvjJ3pIaK9Cs/edit?usp=sharing"
@@ -14,7 +13,9 @@ whr2_1 <- gsheet2tbl(dat2_1, sheetid = NULL)
 
 #Data wrangling
 whr2_1 <- whr2_1 %>% rename(GDP = `Log GDP per capita`,
-                            LifeExpectancy = `Healthy life expectancy at birth`)
+                            "LifeExpectancy" = `Healthy life expectancy at birth`,
+                            "SocialSupport" = `Social support`,
+                            "PerceptionsOfCorruption" = `Perceptions of corruption`)
 
 # Define UI 
 ui <- fluidPage(
@@ -27,7 +28,9 @@ ui <- fluidPage(
                          selectizeInput(inputId = "selectizeCountry", 
                                         label = "Choose up to 6 countries",
                                         choices = unique(whr2_1) %>% select(`Country name`),
-                                        options = list(maxItems = 6, placeholder = 'Select a country name')
+                                        options = list(maxItems = 6, placeholder = 'Select a country name'),
+                                        multiple = TRUE,
+                                        selected = "United States"
                          ) #selectizeInput
                      ), #sidebarPanel
                      
@@ -41,20 +44,24 @@ ui <- fluidPage(
              sidebarLayout(
                  sidebarPanel(
                    sidebarPanel(
+                     width = 12,
                      # Select up to 6 countries
                      selectizeInput(inputId = "selectizeCountry2", 
                                     label = "Choose up to 3 countries",
                                     choices = unique(whr2_1) %>% select(`Country name`),
-                                    options = list(maxItems = 3, placeholder = 'Select a country name')
+                                    options = list(maxItems = 3),
+                                    multiple = TRUE,
+                                    selected = "United States"
                      ), #selectizeInput
                    ), #sidebarPanel
                    
                      radioButtons(inputId = "variables", 
                                   label = "Select a variable to display",
-                                  choices = c(GDP = "GDP", 
-                                              `Life Expectancy` = "LifeExpectancy", 
-                                              Generosity = "Generosity", 
-                                              `Perceptions of corruption` = "`Perceptions of corruption`")
+                                  #choices = c(GDP = "GDP", 
+                                  #            `Life Expectancy` = "LifeExpectancy", 
+                                  #            Generosity = "Generosity", 
+                                  #            `Perceptions of corruption` = "`Perceptions of corruption`")
+                                  choices = colnames(whr2_1)[c(6, 5, 9)] 
                      ) #radioButtons
                  ), #sidebarPanel
                  

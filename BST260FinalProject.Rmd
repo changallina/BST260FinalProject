@@ -65,7 +65,9 @@ combined_countries <- combined_countries %>% mutate(manual_fill = cut(`Ladder sc
 ```
 ```{r}
 whr2_1 <- whr2_1 %>% rename(GDP = `Log GDP per capita`,
-                            LifeExpectancy = `Healthy life expectancy at birth`)
+                            "LifeExpectancy" = `Healthy life expectancy at birth`,
+                            "SocialSupport" = `Social support`,
+                            "PerceptionsOfCorruption" = `Perceptions of corruption`)
 ```
 
 
@@ -84,7 +86,7 @@ topcities <- data.frame(Country = c("Taiwan", "Australia", "Mauritius", "Chile",
 
 lowcities <- data.frame(Country = c("Venezuela", "Haiti", "South Sudan", "Ukraine", "India"), 
     lat = c(6.4238, 18.9715, 6.8770, 48.3794, 20.5937), 
-    lng = c(66.5897, 72.2852, 31.3070, 31.1656, 78.9629),
+    lng = c(-66.5897, -72.2852, 31.3070, 31.1656, 78.9629),
     level = c("saddest", "saddest", "saddest", "saddest", "saddest"))
 
 (lowcities <- st_as_sf(lowcities, coords = c("lng", "lat"), remove = FALSE, 
@@ -97,12 +99,12 @@ ggplot() +
   geom_text_repel(data = mostleast, aes(x = lng, y = lat, label = Country, color = level), 
                   size = 3,
                   fontface = "bold",
-                  nudge_x = c(25, -1.5, 15, -13, -40, -16),
-                  nudge_y = c(-5, -15, 10, 3, -7, 13),
+                  nudge_x = c(25, -1.5, 15, -13, -40, -16, 8, 3, 46, 3, -9),
+                  nudge_y = c(-5, -15, 7, 3, -7, 13, 10, 7, -3, 26, -4),
                   min.segment.length = unit(0, "lines")) +
   geom_sf(data = topcities, alpha = 0.5, size = 0.5, color = "salmon3") +
   geom_sf(data = lowcities, alpha = 0.5, size = 0.5, color = "dodgerblue4") +
-  ggtitle("Happiness Levels Across the World in 2019") +
+  ggtitle("Happiness Levels Across the World in 2019 (based on WHR 2020)") +
   scale_fill_manual(name = "Cantrill Ladder Score", 
                      values = c("dodgerblue4",
                                 "dodgerblue3", 
@@ -126,15 +128,16 @@ ggplot() +
         axis.text = element_blank(),
         axis.ticks.y = element_blank(),
         axis.line.y = element_blank())
+  
 ```
 
 
 ```{r}
-whr2_1$year <- as.Date(whr2_1$year)
-whr2_1 %>% filter (`Country name` == "Afghanistan") %>% 
-  ggplot(aes(x = year, y = `Life Ladder`, color = `Country name`)) +
-    geom_line() +
-    scale_x_continuous(breaks = c(2007, 2020))
+# whr2_1$year <- as.Date(whr2_1$year)
+# whr2_1 %>% filter (`Country name` == "Afghanistan") %>% 
+#   ggplot(aes(x = year, y = `Life Ladder`, color = `Country name`)) +
+#     geom_line() +
+#     scale_x_continuous(breaks = c(2007, 2020))
 ```
 
 
