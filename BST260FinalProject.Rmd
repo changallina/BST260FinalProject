@@ -9,6 +9,8 @@ library(tidyverse)
 library(ggplot2)
 library(rvest)
 library(maps)
+library(randomForest)
+library(caret)
 ```
 
 ```{r}
@@ -140,4 +142,40 @@ ggplot() +
 #     scale_x_continuous(breaks = c(2007, 2020))
 ```
 
+```{r}
+#dataframe for machine learning
+#predicting ladder score based on other variables
 
+#do not need country and year
+machine_whr <- whr2_1 %>%
+  select(3:12)
+
+#make empty rows 0 for countries with no reporting for specific countries
+#reasoning is that those countries might not allow residents to answer those questions or residents are less inclined to answer them
+machine_whr$`Confidence in national government`[is.na(machine_whr$`Confidence in national government`)] <- 0
+machine_whr$PerceptionsOfCorruption[is.na(machine_whr$PerceptionsOfCorruption)] <- 0
+
+#drop remaining rows with missing values and rename
+full_machine_whr <- machine_whr %>%
+  drop_na() %>%
+  rename(FreedomLifeChoices = `Freedom to make life choices`,
+         PositiveAffect = `Positive affect`,
+         NegativeAffect = `Negative affect`,
+         Confidence = `Confidence in national government`,
+         LifeLadder = `Life Ladder`)
+
+set.seed(1)
+
+help(sample)
+
+train_set <- sample(1:nrow(full_machine_whr), as.integer(nrow(full_machine_whr)*0.8))
+
+fit_forest <- randomForest(formula = LifeLadder ~., data = full_machine_whr, subset = train_set)
+
+predict_forest <- predict(fit_forest, newdata = full_machine_whr[-train_set, ])
+
+test = full_machine_whr[-train_set, "LifeLadder"]
+
+plot(predict_forest, pull(test, 1))
+
+```
