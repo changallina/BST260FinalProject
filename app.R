@@ -17,6 +17,10 @@ whr2_1 <- whr2_1 %>% rename(GDP = `Log GDP per capita`,
                             "SocialSupport" = `Social support`,
                             "PerceptionsOfCorruption" = `Perceptions of corruption`)
 
+#deploy shiny
+library(rsconnect)
+rsconnect::deployApp('/Users/allinachang/Desktop/BST260/BST260FinalProject/')
+
 # Define UI 
 ui <- fluidPage(
     headerPanel("Dynamics of Happiness"),
