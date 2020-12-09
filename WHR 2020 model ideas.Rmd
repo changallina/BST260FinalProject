@@ -294,16 +294,71 @@ q_gdp <- whr_gdp %>% summarise(q1 = quantile(`Log GDP per capita`)[2], q3 = quan
 quantile(whr_gdp$`Log GDP per capita`)
 whr_gdp <- whr_gdp %>% mutate(gdp_cat = cut(`Log GDP per capita`, breaks = c(-Inf, q_gdp[1], q_gdp[3], q_gdp[2], Inf), labels=c(0,1,2,3)))
 
-# We find that full regression model often have insignificant coefficient of Generosity. We tried to stratify according
-whr_gdp %>% filter(gdp_cat == 0) %>% ggplot(aes(x = year, y = `Life Ladder`, color = `Country name`)) + geom_line() + theme(legend.position = "none")
+# We find that full regression model often have insignificant coefficient of Generosity. We tried to stratify according to gdp (possibly the biggest influencing variable)
+whr_gdp %>% filter(gdp_cat == 3, year %in% 2015:2019) %>% 
+  ggplot(aes(x = `Generosity`, y = `Life Ladder`)) + 
+  geom_point(color = "blue")+
+  facet_wrap(.~year)+
+  ggtitle("Cantril Ladder vs Generosity at highest GDP category")
 
-whr_gdp %>% filter(gdp_cat==3, year == 2018) %>% ggplot(aes(x = `Generosity`, y = `Life Ladder`)) + geom_point(color = "blue")
-mod_gdp3_2018<- lm(`Life Ladder` ~ `Log GDP per capita`+
+whr_gdp %>% filter(gdp_cat == 2, year %in% 2015:2019) %>% 
+  ggplot(aes(x = `Generosity`, y = `Life Ladder`)) + 
+  geom_point(color = "green")+
+  facet_wrap(.~year)+
+  ggtitle("Cantril Ladder vs Generosity at 2nd GDP category")
+
+whr_gdp %>% filter(gdp_cat == 1, year %in% 2015:2019) %>% 
+  ggplot(aes(x = `Generosity`, y = `Life Ladder`)) + 
+  geom_point(color = "red")+
+  facet_wrap(.~year)+
+  ggtitle("Cantril Ladder vs Generosity at 3rd GDP category")
+
+whr_gdp %>% filter(gdp_cat == 0, year %in% 2015:2019) %>% 
+  ggplot(aes(x = `Generosity`, y = `Life Ladder`)) + 
+  geom_point(color = "purple")+
+  facet_wrap(.~year)+
+  ggtitle("Cantril Ladder vs Generosity at 4th GDP category")
+
+# Try to create model from stratified data
+model_gdp3_year <- function(y){
+  whr_df <- whr_gdp %>% filter(gdp_cat==3, year == y) %>% dplyr::select(`Life Ladder`, `Log GDP per capita`,
+             `Social support`, `Healthy life expectancy at birth`,
+             `Freedom to make life choices`,
+             `Generosity`,
+             `Perceptions of corruption`) %>% drop_na()
+  
+  mod <- lm(`Life Ladder` ~ `Log GDP per capita`+
              `Social support`+`Healthy life expectancy at birth`+
              `Freedom to make life choices`+
              `Generosity`+
-             `Perceptions of corruption`, data = whr_gdp %>% filter(gdp_cat==3, year == 2018))
-summary(mod_gdp3_2018)
+             `Perceptions of corruption`,
+           data = whr_df)
+  mod
+}
+mod_gdp3_2019<- lm(`Life Ladder` ~ `Log GDP per capita`+
+             `Social support`+`Healthy life expectancy at birth`+
+             `Freedom to make life choices`+
+             `Generosity`+
+             `Perceptions of corruption`, data = whr_gdp %>% filter(gdp_cat==3, year == 2019))
+summary(mod_gdp3_2019)
+
+models_gdp3<- lapply(years, model_gdp3_year)
+names(models_gdp3) <- paste0("models_gdp3.", 2015:2019)
+lapply(models_gdp3, summary)
+
+# add interaction term `Log GDP per capita`:Generosity to 2017~2019 data
+# first create gdp category in whr20 data
+whr20_gdp <- whr20 %>% filter(!is.na(`Logged GDP per capita`))
+q20_gdp <- whr20_gdp %>% summarise(q1 = quantile(`Logged GDP per capita`)[2], q3 = quantile(`Logged GDP per capita`)[4], mean = mean(`Logged GDP per capita`))
+whr20_gdp <- whr20_gdp %>% mutate(gdp_cat = cut(`Logged GDP per capita`, breaks = c(-Inf, q20_gdp[1], q20_gdp[3], q20_gdp[2], Inf), labels=c(0,1,2,3)))
+
+mod1_gdp_gen <- lm(`Ladder score` ~ gdp_cat+
+             `Social support`+`Healthy life expectancy`+
+             `Freedom to make life choices`+
+             `Perceptions of corruption`+
+               Generosity,
+           data = whr20_gdp)
+summary(mod1_gdp_gen)
 ```
 
 
