@@ -61,8 +61,13 @@ ui <- fluidPage(
                      ), #selectizeInput
                    ), #sidebarPanel
                    
-                   sliderInput("slider_year", label ="Years", min = min(whr2_1$year), 
-                               max = max(whr2_1$year), value = c(2015, 2019), ticks = FALSE), # year range
+                   sliderInput("slider_year", 
+                               label ="Years", 
+                               min = min(whr2_1$year), 
+                               max = max(whr2_1$year), 
+                               value = c(2015, 2019),
+                               sep = "",
+                               ticks = FALSE), # year range
                    
                      radioButtons(inputId = "variables", 
                                   label = "Select a variable to display",
