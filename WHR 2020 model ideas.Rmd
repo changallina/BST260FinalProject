@@ -9,7 +9,14 @@ library(tidyverse)
 library(readxl) 
 library(gsheet)
 library(MASS)
+library(ggplot2)
+library(grid)
+library(gridExtra)
 
+```
+
+
+```{r}
 # Read WHR20_DataForFigure2.1.xls (2017~2019 average) and WHR20_DataForTable2.1.xls (2008~2019 with additional variables)
 # Main dependent variable: Ladder score, independent variable: `Logged GDP per capita`+`Social support`+`Healthy life expectancy`+`Freedom to make life choices`+`Generosity`+`Perceptions of corruption`
 whr20 <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1jVOpMfl94xDmip0NrJEXORoFK4RBfB7leDVzyJnk47w/edit#gid=28299357", sheetid = NULL)
@@ -24,7 +31,84 @@ mod1 <- lm(`Ladder score` ~ `Logged GDP per capita`+
              `Perceptions of corruption`,
            data = whr20)
 summary(mod1)
+##After we ran multiple regression  on the data (2017-2019), we found that five out of six variables were significant. The only exception was generosity. Therefore, we have ran some scatter plots to see the relationship between happiness score (ladder score) and each variable. From the scatter plots below, we found that it seems that there was not a linear relationship between  generosity and happiness score and between percpetions of corruption and happiness score.
 
+
+p_1 <- whr20 %>% 
+  ggplot(aes(x= `Logged GDP per capita`, y= `Ladder score`)) +
+    geom_point() +
+    ylab("Happiness score")  +
+    xlab("Logged GDP per capita") +
+  ggtitle("Ladder vs GDP per Capita")
+
+p_1
+
+
+p_2 <- whr20 %>% 
+  ggplot(aes(x= `Social support`, y= `Ladder score`)) +
+    geom_point() +
+    ylab("Happiness score")  +
+    xlab("Social support") +
+  ggtitle("Ladder vs Social Support")
+
+p_2
+
+p_3 <- whr20 %>% 
+  ggplot(aes(x= `Healthy life expectancy`, y= `Ladder score`)) +
+    geom_point() +
+    ylab("Happiness score")  +
+    xlab("Healthy life expectancy") +
+  ggtitle("Ladder vs Healthy Life Expectancy")
+
+p_3
+
+p_4 <- whr20 %>% 
+  ggplot(aes(x= `Freedom to make life choices`, y= `Ladder score`)) +
+    geom_point() +
+    ylab("Happiness score")  +
+    xlab("Freedom to make life choices") +
+  ggtitle("Ladder vs Freedom to make life choices")
+
+p_4
+
+p_5 <- whr20 %>%
+    ggplot(aes(x= `Generosity`, y= `Ladder score`)) +
+    geom_point() +
+    ylab("Happiness score")  +
+    xlab("Generosity") +
+  ggtitle("Ladder vs Generosity")
+
+p_5
+
+
+p_6 <- whr20 %>% 
+  ggplot(aes(x= `Perceptions of corruption`, y= `Ladder score`)) +
+    geom_point() +
+    ylab("Happiness score")  +
+    xlab("Perceptions of corruption") +
+  ggtitle("Ladder vs Perceptions of Corruption")
+  
+p_6
+
+
+grid.arrange(p_1, p_2, p_3, p_4, p_5, p_6, nrow = 3)
+
+
+##We have ran some plots to check the residual for the regression model(2017-2019 data).
+
+# Residuals versus fitted plot
+fitted(mod1)
+residuals(mod1)
+plot(fitted(mod1), residuals(mod1)) 
+abline(a=0,b=0,col="pink")
+
+# QQ Norm plot
+qqnorm(residuals(mod1))
+qqline(residuals(mod1),col="pink")
+
+
+
+# We ran regression analyses for each year. 
 # Model for 2019 only
 whr19 <- whr_all %>% filter(year == 2019)
 mod_19 <- lm(`Life Ladder` ~ `Log GDP per capita`+
