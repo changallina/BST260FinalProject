@@ -3,9 +3,7 @@ library(gsheet)
 library(tidyverse)
 library(lubridate)
 library(ggplot2)
-
-#todo: 
-#fit gray background for tab 2
+library(rsconnect)
 
 #Import Data Table 2.1 from WHR 2020
 dat2_1 <- "https://docs.google.com/spreadsheets/d/1oMzplKOmjs0hKKmXKqOCM90CvPsS7aCIj1adox0nvNU/edit#gid=1261774380"
@@ -19,9 +17,6 @@ whr2_1 <- whr2_1 %>% rename(GDP = `Log GDP per capita`,
                             FreedomToMakeLifeChoices = `Freedom to make life choices`
                             )
 country.list <- unique(whr2_1$`Country name`)
-#deploy shiny
-library(rsconnect)
-#rsconnect::deployApp('/Users/allinachang/Desktop/BST260/BST260FinalProject/')
 
 # Define UI 
 ui <- fluidPage(
@@ -30,7 +25,6 @@ ui <- fluidPage(
         tabPanel("Cantril Ladder",  
                  sidebarLayout(
                      sidebarPanel(
-                         # Select up to 6 countries
                          selectizeInput(inputId = "selectizeCountry", 
                                         label = "Choose up to 6 countries",
                                         choices = country.list,
@@ -51,7 +45,6 @@ ui <- fluidPage(
                  sidebarPanel(
                    sidebarPanel(
                      width = 12,
-                     # Select up to 6 countries
                      selectizeInput(inputId = "selectizeCountry2", 
                                     label = "Choose up to 3 countries",
                                     choices = country.list,
@@ -71,12 +64,6 @@ ui <- fluidPage(
                    
                      radioButtons(inputId = "variables", 
                                   label = "Select a variable to display",
-                                  #choices = c(GDP = `Log GDP per capita`,
-                                  #LifeExpectancy = `Healthy life expectancy at birth`,
-                                  #SocialSupport = `Social support`,
-                                  #PerceptionsOfCorruption = `Perceptions of corruption`,
-                                  #FreedomToMakeLifeChoices = `Freedom to make life choices`)
-                                  
                                   choiceNames = c("Log GDP per capita",
                                                     "Social support",
                                                   "Healthy life expectancy at birth",
@@ -118,8 +105,6 @@ server <- function(input, output) {
         ylab("Happiness Ladder Score") +
         xlab(sprintf("%s", input$variables)) +
         ggtitle(sprintf("%s Across Different Countries", input$variables)) +
-        # ggtitle(paste(str_remove(toString(input$variables), "(`|`|'|')")),
-        #         "Across Different Countries") +
         scale_color_discrete(name = "Country")
     }) #renderPlot
 }
