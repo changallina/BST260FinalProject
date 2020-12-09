@@ -1,7 +1,7 @@
 ---
 title: "BST260WHR project"
-author: "Sung-An Tai"
-date: "2020/11/27"
+author: "Sung-An Tai, Ellen Kao, Flora Chang, Allina Chang"
+date: "2020/12/9"
 output: html_document
 ---
 ```{r, message=FALSE, warning=FALSE}
@@ -17,27 +17,35 @@ library(rvest)
 library(maps)
 library(randomForest)
 library(caret)
+library(sf)
+library(ggrepel)
+library(ggspatial)
+library(gsheet)
 ```
 
 # Data Visualization
+
+First, we read in the data pulled from the 2020 World Happiness Report. We decided to use the datasets for Table 2.1 and Figure 2.1 in the report. 
 ```{r}
-# import datasets
-library(gsheet)
-#spreadsheet of data pulled from 2020 world happiness report (data for figure 2.1 in the report) 
+
+#Figure 2.1
 url20 <- "https://docs.google.com/spreadsheets/d/1vkHkvnZFhtekjkYbF-y7uVo4oE36ROaqJx4lxVIkdq4/edit?usp=sharing"
 dat20 <- gsheet2tbl(url20, sheetid = NULL)
 
-#shiny
+#Table 2.1
 dat2_1 <- "https://docs.google.com/spreadsheets/d/1bAzkkXU3W7LALAzP2cnaahbf-s52kr8GvjJ3pIaK9Cs/edit?usp=sharing"
 whr2_1 <- gsheet2tbl(dat2_1, sheetid = NULL)
 ```
 
+We chose to visualize happiness levels across the world in 2019 and make some conclusions about whether or not happiness is regionally correlated. We also thought it would be interesting to visualize how discrepant happiness levels could be within continents. 
 
+We also visualized happiness across the years as well as the relation of the Ladder Score to other variables in a Shiny app format (https://changallina.shinyapps.io/bst260finalproject/).
 
+In this first code chunk, we combined our dataframe containing data from Figure 2.1 of the 2020 World Happiness Report with a world map dataframe. In order to do so, we had to rename some of the countries so that they would match up between the two sets of data. Additionally, we wanted to include Hong Kong as its own country/region instead of treating it as a subregion within China, as the world map dataset did. 
+
+To make our final world map easier to interpret, we incremented Cantril Ladder Scores by 0.5. Since there were no ladder scores below 2, that was the lower bound of our first category. 
 ```{r}
 world_map = map_data("world")
-
-#dat20[is.na(match(dat20$`Country name`, world_map$region)), ]
 
 dat20 <- dat20 %>%
   mutate(new_names = recode(`Country name`,
@@ -58,12 +66,10 @@ world_map <- world_map %>%
   filter(region != "Antarctica") %>% 
   rename("Country" = region)
 
-
 dat20 <- dat20 %>%
   rename("Country" = new_names)
 
 combined_countries <- full_join(dat20, world_map)
-
 
 combined_countries <- combined_countries %>% mutate(manual_fill = cut(`Ladder score`, 
                          breaks = c(2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, Inf),
@@ -71,20 +77,15 @@ combined_countries <- combined_countries %>% mutate(manual_fill = cut(`Ladder sc
                                     "(4.5, 5]", "(5, 5.5]", "(5.5, 6]", "(6, 6.5]", 
                                     "(6.5, 7]", "(7, 7.5]", "(7.5, 8]", ">8"), 
                          right = TRUE))
-```
-```{r}
+
 whr2_1 <- whr2_1 %>% rename(GDP = `Log GDP per capita`,
                             "LifeExpectancy" = `Healthy life expectancy at birth`,
                             "SocialSupport" = `Social support`,
                             "PerceptionsOfCorruption" = `Perceptions of corruption`)
 ```
 
-
+In this section of code, we identified the lowest and highest Cantril ladder scores within each continent. As Australia can be considered as its own continent, we did not indicate the lowest-ladder score in that region.
 ```{r}
-library(sf)
-library(ggrepel)
-library(ggspatial)
-
 topcities <- data.frame(Country = c("Taiwan", "Australia", "Mauritius", "Chile", "Canada", "Finland"), 
     lat = c(23.6978, -43.23242, -20.48486, -33.447487, 56.1394, 60.04068), 
     lng = c(120.9605, 147.3488, 57.65127, -70.673676, -106.3468, 20.61133),
@@ -102,7 +103,10 @@ lowcities <- data.frame(Country = c("Venezuela", "Haiti", "South Sudan", "Ukrain
     crs = 4326, agr = "constant"))
 
 mostleast <- rbind(topcities, lowcities)
+```
 
+We are finally able to build our world map based on Cantril Ladder Scores. Countries of note for 2019 include South Sudan and Finland, two countries that represent the extremes in average Cantrill Ladder score. Happiness is at least somewhat regionally correlated which reflects how neighboring countries may share general characteristics that lead to happiness levels. Most of the countries in Africa and in the Middle East are ranked significantly lower in "happiness" compared to other countries in the world while Europe and the Americas display relatively high ladder scores. 
+```{r}
 ggplot() +
   geom_polygon(combined_countries, mapping = aes(x = long, y = lat, group = group, fill = manual_fill)) +
   geom_text_repel(data = mostleast, aes(x = lng, y = lat, label = Country, color = level), 
@@ -139,7 +143,6 @@ ggplot() +
         axis.line.y = element_blank())
   
 ```
-
 
 # Data Analysis: Regression and Random Forest
 
@@ -485,18 +488,11 @@ The result of the model showed that only the highest GDP per capita has a signfi
 
 ## Random Forest
 ```{r}
-#dataframe for machine learning
-#predicting ladder score based on other variables
-
-#do not need country and year
 machine_whr <- whr2_1 %>% dplyr::select(3:12)
 
-#make empty rows 0 for countries with no reporting for specific countries
-#reasoning is that those countries might not allow residents to answer those questions or residents are less inclined to answer them
 machine_whr$`Confidence in national government`[is.na(machine_whr$`Confidence in national government`)] <- 0
 machine_whr$PerceptionsOfCorruption[is.na(machine_whr$PerceptionsOfCorruption)] <- 0
 
-#drop remaining rows with missing values and rename
 full_machine_whr <- machine_whr %>%
   drop_na() %>%
   rename(FreedomLifeChoices = `Freedom to make life choices`,
@@ -517,7 +513,6 @@ test = full_machine_whr[-train_set, "LifeLadder"]
 
 plot(predict_forest, pull(test, 1))
 
-#MSE
 mean((predict_forest - pull(test, 1))^2)
 
 ```
