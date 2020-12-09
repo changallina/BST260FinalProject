@@ -16,7 +16,7 @@ whr2_1 <- whr2_1 %>% rename(GDP = `Log GDP per capita`,
                             "LifeExpectancy" = `Healthy life expectancy at birth`,
                             "SocialSupport" = `Social support`,
                             "PerceptionsOfCorruption" = `Perceptions of corruption`)
-
+country.list <- unique(whr2_1$`Country name`)
 #deploy shiny
 library(rsconnect)
 #rsconnect::deployApp('/Users/allinachang/Desktop/BST260/BST260FinalProject/')
@@ -29,9 +29,10 @@ ui <- fluidPage(
                  sidebarLayout(
                      sidebarPanel(
                          # Select up to 6 countries
+                         
                          selectizeInput(inputId = "selectizeCountry", 
                                         label = "Choose up to 6 countries",
-                                        choices = unique(whr2_1) %>% select(`Country name`),
+                                        choices = country.list,
                                         options = list(maxItems = 6, placeholder = 'Select a country name'),
                                         multiple = TRUE,
                                         selected = "United States"
@@ -52,7 +53,7 @@ ui <- fluidPage(
                      # Select up to 6 countries
                      selectizeInput(inputId = "selectizeCountry2", 
                                     label = "Choose up to 3 countries",
-                                    choices = unique(whr2_1) %>% select(`Country name`),
+                                    choices = country.list,
                                     options = list(maxItems = 3),
                                     multiple = TRUE,
                                     selected = "United States"
