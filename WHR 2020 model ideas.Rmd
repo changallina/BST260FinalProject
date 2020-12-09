@@ -38,7 +38,7 @@ summary(mod_19)
 
 # Model from 2015 to 2019
 modeling <- function(y){
-  whr_df <- whr_all %>% filter(year == y) %>% select(`Life Ladder`, `Log GDP per capita`,
+  whr_df <- whr_all %>% filter(year == y) %>% dplyr::select(`Life Ladder`, `Log GDP per capita`,
              `Social support`, `Healthy life expectancy at birth`,
              `Freedom to make life choices`,
              `Generosity`,
@@ -67,7 +67,7 @@ Model backward selection:
 mod1_bkwd <- step(mod1, direction = "backward")
 summary(mod1_bkwd)
 
-no.na.whr19 <- whr19 %>% select(`Life Ladder`, `Log GDP per capita`,
+no.na.whr19 <- whr19 %>% dplyr::select(`Life Ladder`, `Log GDP per capita`,
              `Social support`, `Healthy life expectancy at birth`,
              `Freedom to make life choices`,
              `Generosity`,
@@ -83,7 +83,7 @@ s_19 <- summary(mod_19_bckwd)
 
 # backward selection from 2015 to 2019
 backward.select <- function(y){
-  whr_df <- whr_all %>% filter(year == y) %>% select(`Life Ladder`, `Log GDP per capita`,
+  whr_df <- whr_all %>% filter(year == y) %>% dplyr::select(`Life Ladder`, `Log GDP per capita`,
              `Social support`, `Healthy life expectancy at birth`,
              `Freedom to make life choices`,
              `Generosity`,
@@ -100,5 +100,6 @@ backward.select <- function(y){
 }
 
 backward.select(2015)
+backward.select(2016)
 ```
 
