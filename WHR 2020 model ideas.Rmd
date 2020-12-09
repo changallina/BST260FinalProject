@@ -12,6 +12,7 @@ library(MASS)
 library(ggplot2)
 library(grid)
 library(gridExtra)
+library(asbio)
 
 ```
 
@@ -31,6 +32,95 @@ mod1 <- lm(`Ladder score` ~ `Logged GDP per capita`+
              `Perceptions of corruption`,
            data = whr20)
 summary(mod1)
+
+
+#Then, we tried to see how much variance each variable explained in the data by looking at partial R2. 
+
+#Logged GPD per capita explained about 5% of the variance in the model. 
+lm.with<-lm(`Ladder score` ~ `Logged GDP per capita`+
+             `Social support`+`Healthy life expectancy`+
+             `Freedom to make life choices`+
+             `Generosity`+
+             `Perceptions of corruption`,
+           data = whr20)
+
+lm.without<-update(lm.with, ~. - `Logged GDP per capita`)
+
+R2_gdp <-  partial.R2(lm.without,lm.with)
+R2_gdp
+
+## Social support explained 10% of the variance in the model. 
+
+lm.with<-lm(`Ladder score` ~ `Logged GDP per capita`+
+             `Social support`+`Healthy life expectancy`+
+             `Freedom to make life choices`+
+             `Generosity`+
+             `Perceptions of corruption`,
+           data = whr20)
+
+lm.without.2<-update(lm.with, ~. - `Social support`)
+
+R2_social_support <-  partial.R2(lm.without.2,lm.with)
+R2_social_support
+
+
+##Healthy life expectancy explained 4.8% of the variance in the model.
+lm.with<-lm(`Ladder score` ~ `Logged GDP per capita`+
+             `Social support`+`Healthy life expectancy`+
+             `Freedom to make life choices`+
+             `Generosity`+
+             `Perceptions of corruption`,
+           data = whr20)
+
+lm.without.3<-update(lm.with, ~. - `Healthy life expectancy`)
+
+R2_healthy_life_expectancy <-  partial.R2(lm.without.3,lm.with)
+R2_healthy_life_expectancy
+
+## Freedom to make life choices explained 8% of the variance in the model. 
+lm.with<-lm(`Ladder score` ~ `Logged GDP per capita`+
+             `Social support`+`Healthy life expectancy`+
+             `Freedom to make life choices`+
+             `Generosity`+
+             `Perceptions of corruption`,
+           data = whr20)
+
+lm.without.4<-update(lm.with, ~. - `Freedom to make life choices`)
+
+R2_choice <-  partial.R2(lm.without.4,lm.with)
+R2_choice
+
+##Generostiy explained 1% of the variance in the model. 
+lm.with<-lm(`Ladder score` ~ `Logged GDP per capita`+
+             `Social support`+`Healthy life expectancy`+
+             `Freedom to make life choices`+
+             `Generosity`+
+             `Perceptions of corruption`,
+           data = whr20)
+
+lm.without.5<-update(lm.with, ~. - `Generosity`)
+
+R2_generosity <-  partial.R2(lm.without.5,lm.with)
+R2_generosity
+
+
+## Perceptions of corruption explained 2.7% of the variance in the model. 
+lm.with<-lm(`Ladder score` ~ `Logged GDP per capita`+
+             `Social support`+`Healthy life expectancy`+
+             `Freedom to make life choices`+
+             `Generosity`+
+             `Perceptions of corruption`,
+           data = whr20)
+
+lm.without.6<-update(lm.with, ~. - `Perceptions of corruption`)
+
+R2_corruption <-  partial.R2(lm.without.6,lm.with)
+R2_corruption
+
+
+##Based on the partial R squared results, we found the the top 3 variables which explained the most variance in the model were "Social support" (10%), "Freedom to make life choices" (8%), and "Logged GDP per capita" (5%).
+
+
 ##After we ran multiple regression  on the data (2017-2019), we found that five out of six variables were significant. The only exception was generosity. Therefore, we have ran some scatter plots to see the relationship between happiness score (ladder score) and each variable. From the scatter plots below, we found that it seems that there was not a linear relationship between  generosity and happiness score and between percpetions of corruption and happiness score.
 
 
