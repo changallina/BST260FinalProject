@@ -52,11 +52,11 @@ modeling <- function(y){
            data = whr_df)
   mod
 }
-modeling(2015)
 years <- 2015:2019
 mods.15to19 <- lapply(years, modeling)
 names(mods.15to19) <- paste0("mod.", 2015:2019)
-mods.15to19
+lapply(mods.15to19, summary)
+lapply(mods.15to19, confint)
 
 ```
 Should add analysis for effect modification.
@@ -104,7 +104,32 @@ backward.select(2016)
 ```
 ##visualize cantril ladder by year
 ```{r}
+# Happiness by year of all countries
+whr_all %>% ggplot(aes(x = year, y = `Life Ladder`, color = `Country name`)) +
+                geom_line() +
+                ylab("Cantril Ladder") +
+                ggtitle("Happiness") +
+                scale_color_discrete(name = "Country") +
+                theme(axis.text.x = element_text(angle = 70, hjust =1), legend.position = "none") +
+                scale_x_continuous(breaks = seq(2005, 2019, by = 1)) +
+                xlab("Year")
 
+# Categorize by GDP, divide into 4 parts
+whr_gdp <- whr_all %>% filter(!is.na(`Log GDP per capita`))
+q_gdp <- whr_gdp %>% summarise(q1 = quantile(`Log GDP per capita`)[2], q3 = quantile(`Log GDP per capita`)[4], mean = mean(`Log GDP per capita`))
+quantile(whr_gdp$`Log GDP per capita`)
+whr_gdp <- whr_gdp %>% mutate(gdp_cat = cut(`Log GDP per capita`, breaks = c(-Inf, q_gdp[1], q_gdp[3], q_gdp[2], Inf), labels=c(0,1,2,3)))
+
+# We find that full regression model often have insignificant coefficient of Generosity. We tried to stratify according
+whr_gdp %>% filter(gdp_cat == 0) %>% ggplot(aes(x = year, y = `Life Ladder`, color = `Country name`)) + geom_line() + theme(legend.position = "none")
+
+whr_gdp %>% filter(gdp_cat==3, year == 2018) %>% ggplot(aes(x = `Generosity`, y = `Life Ladder`)) + geom_point(color = "blue")
+mod_gdp3_2018<- lm(`Life Ladder` ~ `Log GDP per capita`+
+             `Social support`+`Healthy life expectancy at birth`+
+             `Freedom to make life choices`+
+             `Generosity`+
+             `Perceptions of corruption`, data = whr_gdp %>% filter(gdp_cat==3, year == 2018))
+summary(mod_gdp3_2018)
 ```
 
 

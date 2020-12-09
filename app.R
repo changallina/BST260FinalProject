@@ -13,9 +13,11 @@ whr2_1 <- gsheet2tbl(dat2_1, sheetid = NULL)
 
 #Data wrangling
 whr2_1 <- whr2_1 %>% rename(GDP = `Log GDP per capita`,
-                            "LifeExpectancy" = `Healthy life expectancy at birth`,
-                            "SocialSupport" = `Social support`,
-                            "PerceptionsOfCorruption" = `Perceptions of corruption`)
+                            LifeExpectancy = `Healthy life expectancy at birth`,
+                            SocialSupport = `Social support`,
+                            PerceptionsOfCorruption = `Perceptions of corruption`,
+                            FreedomToMakeLifeChoices = `Freedom to make life choices`
+                            )
 country.list <- unique(whr2_1$`Country name`)
 #deploy shiny
 library(rsconnect)
@@ -29,7 +31,6 @@ ui <- fluidPage(
                  sidebarLayout(
                      sidebarPanel(
                          # Select up to 6 countries
-                         
                          selectizeInput(inputId = "selectizeCountry", 
                                         label = "Choose up to 6 countries",
                                         choices = country.list,
@@ -60,13 +61,24 @@ ui <- fluidPage(
                      ), #selectizeInput
                    ), #sidebarPanel
                    
+                   sliderInput("slider_year", label ="Years", min = min(whr2_1$year), 
+                               max = max(whr2_1$year), value = c(2015, 2019), ticks = FALSE), # year range
+                   
                      radioButtons(inputId = "variables", 
                                   label = "Select a variable to display",
-                                  #choices = c(GDP = "GDP", 
-                                  #            `Life Expectancy` = "LifeExpectancy", 
-                                  #            Generosity = "Generosity", 
-                                  #            `Perceptions of corruption` = "`Perceptions of corruption`")
-                                  choices = colnames(whr2_1)[c(6, 5, 9)] 
+                                  #choices = c(GDP = `Log GDP per capita`,
+                                  #LifeExpectancy = `Healthy life expectancy at birth`,
+                                  #SocialSupport = `Social support`,
+                                  #PerceptionsOfCorruption = `Perceptions of corruption`,
+                                  #FreedomToMakeLifeChoices = `Freedom to make life choices`)
+                                  
+                                  choiceNames = c("Log GDP per capita",
+                                                    "Social support",
+                                                  "Healthy life expectancy at birth",
+                                                      "Freedom to make life choices",
+                                                      "Generosity",
+                                                      "Perceptions of corruption"),
+                                  choiceValues = colnames(whr2_1)[4:9]
                      ) #radioButtons
                  ), #sidebarPanel
                  
@@ -93,9 +105,9 @@ server <- function(input, output) {
                 xlab("Year")
         
     }) #renderPlot
-    
+    years <- reactive(input$slider_year)
     output$plot2 <- renderPlot({
-        whr2_1 %>% filter(`Country name` %in% c(input$selectizeCountry2)) %>% 
+        whr2_1 %>% filter(`Country name` %in% c(input$selectizeCountry2), year %in% seq(years()[1], years()[2])) %>% 
         ggplot(aes_string(x = input$variables, y = "`Life Ladder`")) +
         geom_point(aes(color = `Country name`)) +
         ylab("Happiness Ladder Score") +
