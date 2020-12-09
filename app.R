@@ -8,7 +8,7 @@ library(ggplot2)
 #fit gray background for tab 2
 
 #Import Data Table 2.1 from WHR 2020
-dat2_1 <- "https://docs.google.com/spreadsheets/d/1bAzkkXU3W7LALAzP2cnaahbf-s52kr8GvjJ3pIaK9Cs/edit?usp=sharing"
+dat2_1 <- "https://docs.google.com/spreadsheets/d/1oMzplKOmjs0hKKmXKqOCM90CvPsS7aCIj1adox0nvNU/edit#gid=1261774380"
 whr2_1 <- gsheet2tbl(dat2_1, sheetid = NULL)
 
 #Data wrangling
@@ -19,7 +19,7 @@ whr2_1 <- whr2_1 %>% rename(GDP = `Log GDP per capita`,
 
 #deploy shiny
 library(rsconnect)
-rsconnect::deployApp('/Users/allinachang/Desktop/BST260/BST260FinalProject/')
+#rsconnect::deployApp('/Users/allinachang/Desktop/BST260/BST260FinalProject/')
 
 # Define UI 
 ui <- fluidPage(

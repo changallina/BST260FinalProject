@@ -102,4 +102,9 @@ backward.select <- function(y){
 backward.select(2015)
 backward.select(2016)
 ```
+##visualize cantril ladder by year
+```{r}
+
+```
+
 
