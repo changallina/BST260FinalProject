@@ -278,16 +278,6 @@ backward.select(2016)
 ```
 ##visualize cantril ladder by year
 ```{r}
-# Happiness by year of all countries
-whr_all %>% ggplot(aes(x = year, y = `Life Ladder`, color = `Country name`)) +
-                geom_line() +
-                ylab("Cantril Ladder") +
-                ggtitle("Happiness") +
-                scale_color_discrete(name = "Country") +
-                theme(axis.text.x = element_text(angle = 70, hjust =1), legend.position = "none") +
-                scale_x_continuous(breaks = seq(2005, 2019, by = 1)) +
-                xlab("Year")
-
 # Categorize by GDP, divide into 4 parts
 whr_gdp <- whr_all %>% filter(!is.na(`Log GDP per capita`))
 q_gdp <- whr_gdp %>% summarise(q1 = quantile(`Log GDP per capita`)[2], q3 = quantile(`Log GDP per capita`)[4], mean = mean(`Log GDP per capita`))
@@ -359,6 +349,12 @@ mod1_gdp_gen <- lm(`Ladder score` ~ gdp_cat+
                Generosity,
            data = whr20_gdp)
 summary(mod1_gdp_gen)
+whr20_few <- whr20 %>% dplyr::select(`Ladder score`, `Logged GDP per capita`,
+             `Social support`,`Healthy life expectancy`,
+             `Freedom to make life choices`,
+             `Perceptions of corruption`,
+               Generosity) %>% drop_na()
+pairs(whr20_few[-1])
 ```
 
 
