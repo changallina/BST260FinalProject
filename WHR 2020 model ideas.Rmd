@@ -4,7 +4,7 @@ author: "Sung-An Tai"
 date: "2020/11/27"
 output: html_document
 ---
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(readxl) 
 library(gsheet)
@@ -13,17 +13,145 @@ library(ggplot2)
 library(grid)
 library(gridExtra)
 library(asbio)
+library(rvest)
+library(maps)
+library(randomForest)
+library(caret)
+```
 
+# Data Visualization
+```{r}
+# import datasets
+library(gsheet)
+#spreadsheet of data pulled from 2020 world happiness report (data for figure 2.1 in the report) 
+url20 <- "https://docs.google.com/spreadsheets/d/1vkHkvnZFhtekjkYbF-y7uVo4oE36ROaqJx4lxVIkdq4/edit?usp=sharing"
+dat20 <- gsheet2tbl(url20, sheetid = NULL)
+
+#shiny
+dat2_1 <- "https://docs.google.com/spreadsheets/d/1bAzkkXU3W7LALAzP2cnaahbf-s52kr8GvjJ3pIaK9Cs/edit?usp=sharing"
+whr2_1 <- gsheet2tbl(dat2_1, sheetid = NULL)
+```
+
+
+
+```{r}
+world_map = map_data("world")
+
+#dat20[is.na(match(dat20$`Country name`, world_map$region)), ]
+
+dat20 <- dat20 %>%
+  mutate(new_names = recode(`Country name`,
+    "United Kingdom" = "UK",
+    "United States" = "USA",
+    "Taiwan Province of China" = "Taiwan",
+    "Trinidad and Tobago" = "Trinidad",
+    "North Cyprus" = "Cyprus",
+    "Hong Kong S.A.R. of China" = "Hong Kong",
+    "Palestinian Territories" = "Palestine",
+    "Congo (Brazzaville)" = "Democratic Republic of the Congo"
+  )
+  )
+
+world_map <- within(world_map, region[region == "China" & subregion == "Hong Kong"] <- "Hong Kong")
+
+world_map <- world_map %>%
+  filter(region != "Antarctica") %>% 
+  rename("Country" = region)
+
+
+dat20 <- dat20 %>%
+  rename("Country" = new_names)
+
+combined_countries <- full_join(dat20, world_map)
+
+
+combined_countries <- combined_countries %>% mutate(manual_fill = cut(`Ladder score`, 
+                         breaks = c(2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, Inf),
+                         labels = c("(2, 2.5]", "(2.5, 3]", "(3, 3.5]", "(3.5, 4]", "(4, 4.5]",
+                                    "(4.5, 5]", "(5, 5.5]", "(5.5, 6]", "(6, 6.5]", 
+                                    "(6.5, 7]", "(7, 7.5]", "(7.5, 8]", ">8"), 
+                         right = TRUE))
+```
+```{r}
+whr2_1 <- whr2_1 %>% rename(GDP = `Log GDP per capita`,
+                            "LifeExpectancy" = `Healthy life expectancy at birth`,
+                            "SocialSupport" = `Social support`,
+                            "PerceptionsOfCorruption" = `Perceptions of corruption`)
 ```
 
 
 ```{r}
+library(sf)
+library(ggrepel)
+library(ggspatial)
+
+topcities <- data.frame(Country = c("Taiwan", "Australia", "Mauritius", "Chile", "Canada", "Finland"), 
+    lat = c(23.6978, -43.23242, -20.48486, -33.447487, 56.1394, 60.04068), 
+    lng = c(120.9605, 147.3488, 57.65127, -70.673676, -106.3468, 20.61133),
+    level = c("happiest", "happiest", "happiest", "happiest", "happiest", "happiest"))
+
+(topcities <- st_as_sf(topcities, coords = c("lng", "lat"), remove = FALSE, 
+    crs = 4326, agr = "constant"))
+
+lowcities <- data.frame(Country = c("Venezuela", "Haiti", "South Sudan", "Ukraine", "Afghanistan"), 
+    lat = c(6.4238, 18.9715, 6.8770, 48.3794, 33.9391), 
+    lng = c(-66.5897, -72.2852, 31.3070, 31.1656, 67.6100),
+    level = c("saddest", "saddest", "saddest", "saddest", "saddest"))
+
+(lowcities <- st_as_sf(lowcities, coords = c("lng", "lat"), remove = FALSE, 
+    crs = 4326, agr = "constant"))
+
+mostleast <- rbind(topcities, lowcities)
+
+ggplot() +
+  geom_polygon(combined_countries, mapping = aes(x = long, y = lat, group = group, fill = manual_fill)) +
+  geom_text_repel(data = mostleast, aes(x = lng, y = lat, label = Country, color = level), 
+                  size = 3,
+                  fontface = "bold",
+                  nudge_x = c(25, -1.5, 15, -13, -40, -16, 8, 3, 46, 3, 2),
+                  nudge_y = c(-5, -15, 7, 3, -7, 13, 10, 7, -3, 26, 45),
+                  min.segment.length = unit(0, "lines")) +
+  geom_sf(data = topcities, alpha = 0.5, size = 0.5, color = "salmon3") +
+  geom_sf(data = lowcities, alpha = 0.5, size = 0.5, color = "dodgerblue4") +
+  ggtitle("Happiness Levels Across the World in 2019 (based on WHR 2020)") +
+  scale_fill_manual(name = "Cantrill Ladder Score", 
+                     values = c("dodgerblue4",
+                                "dodgerblue3", 
+                                "lightskyblue2",
+                                "paleturquoise3",
+                                "lightcyan3",
+                                "honeydew2",
+                                "khaki1",
+                                "gold1",
+                                "goldenrod1",
+                                "darkgoldenrod2",
+                                "salmon3"),
+                    na.value = "gray") +
+  theme(legend.position = "bottom",
+        legend.title = element_text(size = 8),
+        legend.text = element_text(size = 7)) +
+  guides(shape = guide_legend(override.aes = list(size = 5))) +
+  theme(panel.grid.major = element_blank(), 
+        panel.background = element_blank(),
+        axis.title = element_blank(), 
+        axis.text = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.line.y = element_blank())
+  
+```
+
+
+# Data Analysis: Regression and Random Forest
+
+```{r, warning=FALSE}
 # Read WHR20_DataForFigure2.1.xls (2017~2019 average) and WHR20_DataForTable2.1.xls (2008~2019 with additional variables)
 # Main dependent variable: Ladder score, independent variable: `Logged GDP per capita`+`Social support`+`Healthy life expectancy`+`Freedom to make life choices`+`Generosity`+`Perceptions of corruption`
 whr20 <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1jVOpMfl94xDmip0NrJEXORoFK4RBfB7leDVzyJnk47w/edit#gid=28299357", sheetid = NULL)
 whr_all <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1oMzplKOmjs0hKKmXKqOCM90CvPsS7aCIj1adox0nvNU/edit#gid=1261774380", sheetid = NULL)
-names(whr20)
+```
 
+We first look at the regression model for the pooled data of 2017-2019 
+```{r}
 # Main model for fig 2.1 in the WHR 2020 report, but they used pooled OLS regression specific for panel analysis, rather than plain multiple regression
 mod1 <- lm(`Ladder score` ~ `Logged GDP per capita`+
              `Social support`+`Healthy life expectancy`+
@@ -32,10 +160,10 @@ mod1 <- lm(`Ladder score` ~ `Logged GDP per capita`+
              `Perceptions of corruption`,
            data = whr20)
 summary(mod1)
+```
 
-
-#Then, we tried to see how much variance each variable explained in the data by looking at partial R2. 
-
+Then, we tried to see how much variance each variable explained in the data by looking at partial R2.
+```{r}
 #Logged GPD per capita explained about 5% of the variance in the model. 
 lm.with<-lm(`Ladder score` ~ `Logged GDP per capita`+
              `Social support`+`Healthy life expectancy`+
@@ -116,14 +244,13 @@ lm.without.6<-update(lm.with, ~. - `Perceptions of corruption`)
 
 R2_corruption <-  partial.R2(lm.without.6,lm.with)
 R2_corruption
+```
+
+Based on the partial R squared results, we found the the top 3 variables which explained the most variance in the model were "Social support" (10%), "Freedom to make life choices" (8%), and "Logged GDP per capita" (5%).
 
 
-##Based on the partial R squared results, we found the the top 3 variables which explained the most variance in the model were "Social support" (10%), "Freedom to make life choices" (8%), and "Logged GDP per capita" (5%).
-
-
-##After we ran multiple regression  on the data (2017-2019), we found that five out of six variables were significant. The only exception was generosity. Therefore, we have ran some scatter plots to see the relationship between happiness score (ladder score) and each variable. From the scatter plots below, we found that it seems that there was not a linear relationship between  generosity and happiness score and between percpetions of corruption and happiness score.
-
-
+After we ran multiple regression  on the data (2017-2019), we found that five out of six variables were significant. The only exception was generosity. Therefore, we have ran some scatter plots to see the relationship between happiness score (ladder score) and each variable. From the scatter plots below, we found that it seems that there was not a linear relationship between  generosity and happiness score and between percpetions of corruption and happiness score.
+```{r}
 p_1 <- whr20 %>% 
   ggplot(aes(x= `Logged GDP per capita`, y= `Ladder score`)) +
     geom_point() +
@@ -182,13 +309,12 @@ p_6
 
 
 grid.arrange(p_1, p_2, p_3, p_4, p_5, p_6, nrow = 3)
+```
 
 
-##We have ran some plots to check the residual for the regression model(2017-2019 data).
-
+We ran some diagnostic plots to check the assumptions for linear regression model(2017-2019 data). Diagnostics seems to fulfill "linearity","normality", and "equal variance" assumptions.
+```{r}
 # Residuals versus fitted plot
-fitted(mod1)
-residuals(mod1)
 plot(fitted(mod1), residuals(mod1)) 
 abline(a=0,b=0,col="pink")
 
@@ -196,20 +322,11 @@ abline(a=0,b=0,col="pink")
 qqnorm(residuals(mod1))
 qqline(residuals(mod1),col="pink")
 
+```
 
 
-# We ran regression analyses for each year. 
-# Model for 2019 only
-whr19 <- whr_all %>% filter(year == 2019)
-mod_19 <- lm(`Life Ladder` ~ `Log GDP per capita`+
-             `Social support`+`Healthy life expectancy at birth`+
-             `Freedom to make life choices`+
-             `Generosity`+
-             `Perceptions of corruption`,
-           data = whr19)
-
-summary(mod_19)
-
+## Multiple regression analyses for 2015 - 2019, separately
+```{r}
 # Model from 2015 to 2019
 modeling <- function(y){
   whr_df <- whr_all %>% filter(year == y) %>% dplyr::select(`Life Ladder`, `Log GDP per capita`,
@@ -230,30 +347,16 @@ years <- 2015:2019
 mods.15to19 <- lapply(years, modeling)
 names(mods.15to19) <- paste0("mod.", 2015:2019)
 lapply(mods.15to19, summary)
-lapply(mods.15to19, confint)
-
 ```
-Should add analysis for effect modification.
 
-Model backward selection:
+We found that generally Logged GDP per capita, Social support, Healthy life expectancy, and Freedom to make life choices are 4 out of the 6 variables that have significant coefficient across 2015-2019, except for social support being insignificant in 2019.
+
+
+## Model backward selection for 2015 - 2019
 ```{r}
-# backward selection for 2017~2019 model and 2019 model
+# backward selection for 2017~2019 model
 mod1_bkwd <- step(mod1, direction = "backward")
 summary(mod1_bkwd)
-
-no.na.whr19 <- whr19 %>% dplyr::select(`Life Ladder`, `Log GDP per capita`,
-             `Social support`, `Healthy life expectancy at birth`,
-             `Freedom to make life choices`,
-             `Generosity`,
-             `Perceptions of corruption`) %>% drop_na()
-mod_19_noNA <- lm(`Life Ladder` ~ `Log GDP per capita`+
-             `Social support`+`Healthy life expectancy at birth`+
-             `Freedom to make life choices`+
-             `Generosity`+
-             `Perceptions of corruption`,
-           data = no.na.whr19)
-mod_19_bckwd <- step(mod_19_noNA, direction = "backward")
-s_19 <- summary(mod_19_bckwd)
 
 # backward selection from 2015 to 2019
 backward.select <- function(y){
@@ -273,18 +376,39 @@ backward.select <- function(y){
   mod.backward
 }
 
-backward.select(2015)
-backward.select(2016)
+summary(b2015 <- backward.select(2015))
+summary(b2016 <- backward.select(2016))
+summary(b2017 <- backward.select(2017))
+summary(b2018 <- backward.select(2018))
+summary(b2019 <- backward.select(2019))
+
+list(mod.2015 = coef(b2015), mod.2016 = coef(b2016), mod.2017 = coef(b2017), mod.2018 = coef(b2018), mod.2019 = coef(b2019))
+
 ```
-##visualize cantril ladder by year
+Backward model selection by year using AIC also showed similar conclusion that Logged GDP per capita, Social support, Healthy life expectancy, and Freedom to make life choices are the more influential variables to Cantril Ladder Score.
+
+However, we believe that GDP per capita is potentially related to the other variables, including social support levels, overall life expectancy, freedom to make life choices, generosity, and perception of corruption. This can be guessed by looking at pairwise distribution of each variable:
 ```{r}
-# Categorize by GDP, divide into 4 parts
+whr20_few <- whr20 %>% dplyr::select(`Ladder score`, `Logged GDP per capita`,
+             `Social support`,`Healthy life expectancy`,
+             `Freedom to make life choices`,
+             `Perceptions of corruption`,
+               Generosity) %>% drop_na()
+pairs(whr20_few[-1])
+```
+
+We find that GDP per capita may be highly correlated with social support, life expectancy, and freedom to make life choices. It may be a good idea to stratify by GPD per capital to see if the relationship between these variable and Cantril Ladder score changes.
+
+
+## Stratifying by GDP per Capita
+```{r}
+# Categorize by GDP, divide into 4 quadrants (gdp_cat = 0,1,2, or 3)
 whr_gdp <- whr_all %>% filter(!is.na(`Log GDP per capita`))
 q_gdp <- whr_gdp %>% summarise(q1 = quantile(`Log GDP per capita`)[2], q3 = quantile(`Log GDP per capita`)[4], mean = mean(`Log GDP per capita`))
 quantile(whr_gdp$`Log GDP per capita`)
 whr_gdp <- whr_gdp %>% mutate(gdp_cat = cut(`Log GDP per capita`, breaks = c(-Inf, q_gdp[1], q_gdp[3], q_gdp[2], Inf), labels=c(0,1,2,3)))
 
-# We find that full regression model often have insignificant coefficient of Generosity. We tried to stratify according to gdp (possibly the biggest influencing variable)
+# Plot gdp-stratified Cantril ladder score v.s. Generosity, since it was the least significant predictor from previous models
 whr_gdp %>% filter(gdp_cat == 3, year %in% 2015:2019) %>% 
   ggplot(aes(x = `Generosity`, y = `Life Ladder`)) + 
   geom_point(color = "blue")+
@@ -308,8 +432,12 @@ whr_gdp %>% filter(gdp_cat == 0, year %in% 2015:2019) %>%
   geom_point(color = "purple")+
   facet_wrap(.~year)+
   ggtitle("Cantril Ladder vs Generosity at 4th GDP category")
+```
+We found that across 2015-2019, Generosity seems to be possibly correlated with Cantril Ladder score among the countries with the highest quadrant of GDP per capital.
 
-# Try to create model from stratified data
+Lets further create models from the data restricted to the highest quadrant of GDP per capita:
+```{r}
+# Create model from highest GDP per capita category stratified data
 model_gdp3_year <- function(y){
   whr_df <- whr_gdp %>% filter(gdp_cat==3, year == y) %>% dplyr::select(`Life Ladder`, `Log GDP per capita`,
              `Social support`, `Healthy life expectancy at birth`,
@@ -325,23 +453,26 @@ model_gdp3_year <- function(y){
            data = whr_df)
   mod
 }
-mod_gdp3_2019<- lm(`Life Ladder` ~ `Log GDP per capita`+
-             `Social support`+`Healthy life expectancy at birth`+
-             `Freedom to make life choices`+
-             `Generosity`+
-             `Perceptions of corruption`, data = whr_gdp %>% filter(gdp_cat==3, year == 2019))
-summary(mod_gdp3_2019)
 
 models_gdp3<- lapply(years, model_gdp3_year)
 names(models_gdp3) <- paste0("models_gdp3.", 2015:2019)
 lapply(models_gdp3, summary)
+```
 
-# add interaction term `Log GDP per capita`:Generosity to 2017~2019 data
+There are 2 findings:
+* In some years, the coefficients of either social support, life expectancy, or freedom to make life choices that were believed to be correlated with GDP per capita became insiginficant due to stratification on GDP per capita and their collinearity.
+* The coefficient of generosity was originally insignificant in the models across 2015 - 2019. After restricting to the stratum of the highest GDP per capita, it is now significant in the models in 2015 - 2018. This may indicate that among the higher income countries in the world, generosity level may have significant influence on happiness level, where as in lower income countries generosity may be a minor factor affecting happiness.
+
+We also want to know how would the model behave after changing GDP per capita into categorized variable. We'll apply it to the pooled data in 2017-2019.
+
+## Change GDP per capita into categorized variable
+```{r}
 # first create gdp category in whr20 data
 whr20_gdp <- whr20 %>% filter(!is.na(`Logged GDP per capita`))
 q20_gdp <- whr20_gdp %>% summarise(q1 = quantile(`Logged GDP per capita`)[2], q3 = quantile(`Logged GDP per capita`)[4], mean = mean(`Logged GDP per capita`))
 whr20_gdp <- whr20_gdp %>% mutate(gdp_cat = cut(`Logged GDP per capita`, breaks = c(-Inf, q20_gdp[1], q20_gdp[3], q20_gdp[2], Inf), labels=c(0,1,2,3)))
 
+# modeling
 mod1_gdp_gen <- lm(`Ladder score` ~ gdp_cat+
              `Social support`+`Healthy life expectancy`+
              `Freedom to make life choices`+
@@ -349,12 +480,49 @@ mod1_gdp_gen <- lm(`Ladder score` ~ gdp_cat+
                Generosity,
            data = whr20_gdp)
 summary(mod1_gdp_gen)
-whr20_few <- whr20 %>% dplyr::select(`Ladder score`, `Logged GDP per capita`,
-             `Social support`,`Healthy life expectancy`,
-             `Freedom to make life choices`,
-             `Perceptions of corruption`,
-               Generosity) %>% drop_na()
-pairs(whr20_few[-1])
 ```
+The result of the model showed that only the highest GDP per capita has a signficant coefficient compared to the lowest GDP per capita. Category 1 and 2 showed no difference of their effect on Cantril Ladder score compared to the lowest category. The coefficients of social support, life expectancy, and freedom to make life choices remained significant as the model with continous GDP per capita variable. Note that according to R-squared value, this model (adj-R2 = 0.7555) performs better than the original model(adj-R2 = 0.738).
 
+## Random Forest
+```{r}
+#dataframe for machine learning
+#predicting ladder score based on other variables
+
+#do not need country and year
+machine_whr <- whr2_1 %>% dplyr::select(3:12)
+
+#make empty rows 0 for countries with no reporting for specific countries
+#reasoning is that those countries might not allow residents to answer those questions or residents are less inclined to answer them
+machine_whr$`Confidence in national government`[is.na(machine_whr$`Confidence in national government`)] <- 0
+machine_whr$PerceptionsOfCorruption[is.na(machine_whr$PerceptionsOfCorruption)] <- 0
+
+#drop remaining rows with missing values and rename
+full_machine_whr <- machine_whr %>%
+  drop_na() %>%
+  rename(FreedomLifeChoices = `Freedom to make life choices`,
+         PositiveAffect = `Positive affect`,
+         NegativeAffect = `Negative affect`,
+         Confidence = `Confidence in national government`,
+         LifeLadder = `Life Ladder`)
+
+set.seed(1)
+
+train_set <- sample(1:nrow(full_machine_whr), as.integer(nrow(full_machine_whr)*0.8))
+
+fit_forest <- randomForest(formula = LifeLadder ~., data = full_machine_whr, subset = train_set)
+
+predict_forest <- predict(fit_forest, newdata = full_machine_whr[-train_set, ])
+
+test = full_machine_whr[-train_set, "LifeLadder"]
+
+plot(predict_forest, pull(test, 1))
+
+#MSE
+mean((predict_forest - pull(test, 1))^2)
+
+```
+Here, we used a Random Forest approach to predict Life Ladder scores based on other variables present in the World Happiness Report dataset. We chose to use a subset of the original variables (GDP, social support, life expectancy, freedom to make life choices, generosity, perceptions of corruption, positive affect, negative affect, and confidence in government) due to the large amount of missing values in the remaining variables such as GINI index. However, there were some variables such as "Freedom to make life choices" and "Perception of corruption" that had missing values every year for a few countries such as China. We hypothesized that this was due to lack of reporting from the country, which itself has some implications. Therefore, we set missing values for those specific variables to 0. There remained a few missing values scattered across the other variables which were dropped from the data frame. 
+We chose to use an 80/20 split for training the data and decided this was an appropriate balance between having more data to train on than a simple 50/50 while leaving enough data in the test_set so that it is still representative of the population. 
+The MSE on the test set for this random forest is 0.1848882 which seems low relative to the Life Ladder scores. This is a suggestion that the model is fairly good at predicting life ladder scores from the information we gave it (GDP, social support, life expectancy, freedom to make life choices, generosity, perceptions of corruption, positive affect, negative affect, and confidence in government). 
+The figure plots predicted values by the model against the true values from the original dataset. The points are centered around a slope of 1 (absolute error of 0), which shows that the model is not consistently under-predicting or over-predicting life ladder scores given the other variables listed above. 
 
