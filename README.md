@@ -12,6 +12,7 @@ Goals of the project:
 Instructions:
 1. Look at Rmd file and html file, ‘WHR 2020 model ideas.Rmd’, ‘WHR 2020 model ideas.html’’
 2. Run our shiny app ‘app.R’ The app can also be accessed [here](https://changallina.shinyapps.io/bst260finalproject/)
+3. To see the integrated webpage introducing the background and result of this study, please go to [Be Happy](https://happiness260.wixsite.com/harvardbst?fbclid=IwAR0nJMhA2g1ZC5DODhiXq6aqybot4G_6iahQIaXzV99k5DqpkvUjJs4MB_M)
 
 Data files:
 1. [WHR 2020 Data Figure 2.1](https://docs.google.com/spreadsheets/d/1vkHkvnZFhtekjkYbF-y7uVo4oE36ROaqJx4lxVIkdq4/edit?usp=sharing)
