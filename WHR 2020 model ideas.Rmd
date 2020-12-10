@@ -389,6 +389,7 @@ summary(b2019 <- backward.select(2019))
 list(mod.2015 = coef(b2015), mod.2016 = coef(b2016), mod.2017 = coef(b2017), mod.2018 = coef(b2018), mod.2019 = coef(b2019))
 
 ```
+
 Backward model selection by year using AIC also showed similar conclusion that Logged GDP per capita, Social support, Healthy life expectancy, and Freedom to make life choices are the more influential variables to Cantril Ladder Score.
 
 However, we believe that GDP per capita is potentially related to the other variables, including social support levels, overall life expectancy, freedom to make life choices, generosity, and perception of corruption. This can be guessed by looking at pairwise distribution of each variable:
@@ -401,7 +402,7 @@ whr20_few <- whr20 %>% dplyr::select(`Ladder score`, `Logged GDP per capita`,
 pairs(whr20_few[-1])
 ```
 
-We find that GDP per capita may be highly correlated with social support, life expectancy, and freedom to make life choices. It may be a good idea to stratify by GPD per capital to see if the relationship between these variable and Cantril Ladder score changes.
+We find that GDP per capita may be highly correlated with social support, life expectancy, and freedom to make life choices. It may be a good idea to stratify by GPD per capital to further explore if and how the relationship between these variables and the Cantril Ladder score changes.
 
 
 ## Stratifying by GDP per Capita
@@ -437,6 +438,7 @@ whr_gdp %>% filter(gdp_cat == 0, year %in% 2015:2019) %>%
   facet_wrap(.~year)+
   ggtitle("Cantril Ladder vs Generosity at 4th GDP category")
 ```
+
 We found that across 2015-2019, Generosity seems to be possibly correlated with Cantril Ladder score among the countries with the highest quadrant of GDP per capital.
 
 Lets further create models from the data restricted to the highest quadrant of GDP per capita:
@@ -464,8 +466,8 @@ lapply(models_gdp3, summary)
 ```
 
 There are 2 findings:
-* In some years, the coefficients of either social support, life expectancy, or freedom to make life choices that were believed to be correlated with GDP per capita became insiginficant due to stratification on GDP per capita and their collinearity.
-* The coefficient of generosity was originally insignificant in the models across 2015 - 2019. After restricting to the stratum of the highest GDP per capita, it is now significant in the models in 2015 - 2018. This may indicate that among the higher income countries in the world, generosity level may have significant influence on happiness level, where as in lower income countries generosity may be a minor factor affecting happiness.
+1. In some years, the coefficients of either social support, life expectancy, or freedom to make life choices that were believed to be correlated with GDP per capita became insignificant due to stratification on GDP per capita and their co-linearity.
+2. The coefficient of generosity was originally insignificant in the models across 2015 - 2019. After restricting to the stratum of the highest GDP per capita, it became significant in the models representing years 2015 - 2018. This may indicate that among the higher income countries in the world, generosity level may have significant influence on happiness level, whereas in lower income countries, generosity may simply be a minor factor affecting happiness.
 
 We also want to know how would the model behave after changing GDP per capita into categorized variable. We'll apply it to the pooled data in 2017-2019.
 
@@ -485,7 +487,8 @@ mod1_gdp_gen <- lm(`Ladder score` ~ gdp_cat+
            data = whr20_gdp)
 summary(mod1_gdp_gen)
 ```
-The result of the model showed that only the highest GDP per capita has a signficant coefficient compared to the lowest GDP per capita. Category 1 and 2 showed no difference of their effect on Cantril Ladder score compared to the lowest category. The coefficients of social support, life expectancy, and freedom to make life choices remained significant as the model with continous GDP per capita variable. Note that according to R-squared value, this model (adj-R2 = 0.7555) performs better than the original model(adj-R2 = 0.738).
+
+The result of the model showed that only the highest GDP per capita has a significant coefficient compared to the lowest GDP per capita. Category 1 and 2 showed no difference of their effect on Cantril Ladder score compared to the lowest category. The coefficients of social support, life expectancy, and freedom to make life choices remained significant as the model with continuous GDP per capita variable. Note that according to R-squared value, this model (adj-R2 = 0.7555) performs better than the original model(adj-R2 = 0.738).
 
 ## Random Forest
 
@@ -520,6 +523,8 @@ plot(predict_forest, pull(test, 1))
 mean((predict_forest - pull(test, 1))^2)
 
 ```
+
 The MSE on the test set for this random forest is 0.1848882 which seems low relative to the Life Ladder scores. This is a suggestion that the model is fairly good at predicting life ladder scores from the information we gave it (GDP, social support, life expectancy, freedom to make life choices, generosity, perceptions of corruption, positive affect, negative affect, and confidence in government). 
 The figure plots predicted values by the model against the true values from the original dataset. The points are centered around a slope of 1 (absolute error of 0), which shows that the model is not consistently under-predicting or over-predicting life ladder scores given the other variables listed above. 
+This model may be useful in countries that are missing survey data from the Gallup World Poll that has Cantril Ladder scores, but still want to estimate the average "happiness" levels of their population, given the appropriate variables. 
 
