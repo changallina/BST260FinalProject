@@ -4,6 +4,10 @@ author: "Sung-An Tai, Ellen Kao, Flora Chang, Allina Chang"
 date: "2020/12/9"
 output: html_document
 ---
+[Data link](https://docs.google.com/spreadsheets/d/1vkHkvnZFhtekjkYbF-y7uVo4oE36ROaqJx4lxVIkdq4/edit?usp=sharing) for Figure 2.1 of 2020 WHR Report
+
+[Data link](https://docs.google.com/spreadsheets/d/1bAzkkXU3W7LALAzP2cnaahbf-s52kr8GvjJ3pIaK9Cs/edit?usp=sharing) for Table 2.1 of 2020 WHR Report
+
 ```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(readxl) 
