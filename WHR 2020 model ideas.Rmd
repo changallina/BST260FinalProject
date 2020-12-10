@@ -21,8 +21,13 @@ library(sf)
 library(ggrepel)
 library(ggspatial)
 library(gsheet)
-library(tree)
 ```
+
+# Overview and Motivation
+
+# Related Work
+
+# Initial Questions
 
 # Data Visualization
 
@@ -145,7 +150,7 @@ ggplot() +
   
 ```
 
-# Data Analysis: Regression and Random Forest
+# Data Analysis: Regression
 
 ```{r, warning=FALSE}
 # Read WHR20_DataForFigure2.1.xls (2017~2019 average) and WHR20_DataForTable2.1.xls (2008~2019 with additional variables)
@@ -490,7 +495,7 @@ summary(mod1_gdp_gen)
 
 The result of the model showed that only the highest GDP per capita has a significant coefficient compared to the lowest GDP per capita. Category 1 and 2 showed no difference of their effect on Cantril Ladder score compared to the lowest category. The coefficients of social support, life expectancy, and freedom to make life choices remained significant as the model with continuous GDP per capita variable. Note that according to R-squared value, this model (adj-R2 = 0.7555) performs better than the original model(adj-R2 = 0.738).
 
-## Random Forest
+# Data Analysis: Random Forest
 
 Here, we used a Random Forest approach to predict Life Ladder scores based on other variables present in the World Happiness Report dataset. We chose to use a subset of the original variables (GDP, social support, life expectancy, freedom to make life choices, generosity, perceptions of corruption, positive affect, negative affect, and confidence in government) due to the large amount of missing values in the remaining variables such as GINI index. However, there were some variables such as "Freedom to make life choices" and "Perception of corruption" that had missing values every year for a few countries such as China. We hypothesized that this was due to lack of reporting from the country, which itself has some implications. Therefore, we set missing values for those specific variables to 0. There remained a few missing values scattered across the other variables which were dropped from the data frame. 
 We chose to use an 80/20 split for training the data and decided this was an appropriate balance between having more data to train on than a simple 50/50 while leaving enough data in the test_set so that it is still representative of the population.
