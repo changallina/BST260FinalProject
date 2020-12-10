@@ -124,7 +124,7 @@ lowcities <- data.frame(Country = c("Venezuela", "Haiti", "South Sudan", "Ukrain
 mostleast <- rbind(topcities, lowcities)
 ```
 
-We are finally able to build our world map based on Cantril Ladder Scores. Countries of note for 2019 include South Sudan and Finland, two countries that represent the extremes in average Cantrill Ladder score. Happiness is at least somewhat regionally correlated which reflects how neighboring countries may share general characteristics that lead to happiness levels. Most of the countries in Africa and in the Middle East are ranked significantly lower in "happiness" compared to other countries in the world while Europe and the Americas display relatively high ladder scores. 
+We are finally able to build our world map based on Cantril Ladder Scores. Countries of note for 2019 include South Sudan and Finland, two countries that represent the extremes in average Cantrill Ladder score. A large part of South Sudan's low Ladder score may be attributed to long-standing economic and political instability. Happiness is at least somewhat regionally correlated which reflects how neighboring countries may share general characteristics that lead to happiness levels. Most of the countries in Africa and in the Middle East are ranked significantly lower in "happiness" compared to other countries in the world while Europe and the Americas display relatively high ladder scores. When considering our question of whether countries that are closer to the equator are happier, we were not able to draw any definitive conclusions based on our visualization. We thought that the abundant sun near the equator would boost happiness levels. While this might still be true, it seems as if other variables have overshadowed the potential positive effects of the equator on happiness. The happiest country in the world in 2019 according to this report, Finland, actually lies quite far from the equator while the saddest country, South Sudan, lies much closer. 
 ```{r}
 ggplot() +
   geom_polygon(combined_countries, mapping = aes(x = long, y = lat, group = group, fill = manual_fill)) +
@@ -184,9 +184,9 @@ mod1 <- lm(`Ladder score` ~ `Logged GDP per capita`+
 summary(mod1)
 ```
 
-Then, we tried to see how much variance each variable explained in the data by looking at partial R2.
+Then, we tried to see how much variance each variable explained in the data by looking at partial R2. 
 ```{r}
-#Logged GPD per capita explained about 5% of the variance in the model. 
+#Logged GDP per capita explained about 5% of the variance in the model. 
 lm.with<-lm(`Ladder score` ~ `Logged GDP per capita`+
              `Social support`+`Healthy life expectancy`+
              `Freedom to make life choices`+
@@ -271,7 +271,7 @@ R2_corruption
 Based on the partial R squared results, we found the the top 3 variables which explained the most variance in the model were "Social support" (10%), "Freedom to make life choices" (8%), and "Logged GDP per capita" (5%).
 
 
-After we ran multiple regression  on the data (2017-2019), we found that five out of six variables were significant. The only exception was generosity. Therefore, we have ran some scatter plots to see the relationship between happiness score (ladder score) and each variable. From the scatter plots below, we found that it seems that there was not a linear relationship between  generosity and happiness score and between percpetions of corruption and happiness score.
+After we ran multiple regression  on the data (2017-2019), we found that five out of six variables were significant. The only exception was generosity. Therefore, we have ran some scatter plots to see the relationship between happiness score (ladder score) and each variable. From the scatter plots below, we found that it seems that there was not a linear relationship between generosity and happiness score and between perceptions of corruption and happiness score.
 ```{r}
 p_1 <- whr20 %>% 
   ggplot(aes(x= `Logged GDP per capita`, y= `Ladder score`)) +
@@ -334,7 +334,7 @@ grid.arrange(p_1, p_2, p_3, p_4, p_5, p_6, nrow = 3)
 ```
 
 
-We ran some diagnostic plots to check the assumptions for linear regression model(2017-2019 data). Diagnostics seems to fulfill "linearity","normality", and "equal variance" assumptions.
+Then, we ran some diagnostic plots to check the assumptions for linear regression model(2017-2019 data). Diagnostics seems to fulfill "linearity","normality", and "equal variance" assumptions.
 ```{r}
 # Residuals versus fitted plot
 plot(fitted(mod1), residuals(mod1)) 
@@ -484,7 +484,9 @@ lapply(models_gdp3, summary)
 ```
 
 There are 2 findings:
+
 1. In some years, the coefficients of either social support, life expectancy, or freedom to make life choices that were believed to be correlated with GDP per capita became insignificant due to stratification on GDP per capita and their co-linearity.
+
 2. The coefficient of generosity was originally insignificant in the models across 2015 - 2019. After restricting to the stratum of the highest GDP per capita, it became significant in the models representing years 2015 - 2018. This may indicate that among the higher income countries in the world, generosity level may have significant influence on happiness level, whereas in lower income countries, generosity may simply be a minor factor affecting happiness.
 
 We also want to know how would the model behave after changing GDP per capita into categorized variable. We'll apply it to the pooled data in 2017-2019.
