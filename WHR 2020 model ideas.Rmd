@@ -24,10 +24,18 @@ library(gsheet)
 ```
 
 # Overview and Motivation
+In our own ways, we are all seeking happiness, not only for us, but also for our loved ones. We wanted to choose a topic that is relatable for everyone. Thus, we looked into the World Happiness Report. The World Happiness Report is a landmark survey of the state of global happiness that ranks countries by how happy their citizens perceive themselves to be. Especially during this new COVID-19 reality that we are living in, external factors can often shake our happiness. We thought it would be interesting to dig deeper into the predictors of happiness. With team members located in Taiwan and the US, we also wanted to choose a topic that compares and contrasts across countries. Through this project, we hoped to gain insight about how happiness trends vary across different countries, how different variables may or may not explain happiness, and how happiness can be predicted in the future. 
 
 # Related Work
+The world map on the midterm inspired us to visualize data across the entire world, and current day events revolving COVID-19 led us to choose a topic that is largely impacted by the consequences of the pandemic. 
 
 # Initial Questions
+Our initial question was: How does happiness vary across the world? After beginning to look into the data and starting to visualize the results, additional questions arose such as:
+Does geographical location play a role in happiness levels?
+Are countries that are closer to the equator happier?
+Which variables predict happiness? 
+How does happiness change as a function of time?
+Are first-world countries happier than second- or third-world countries?
 
 # Data Visualization
 
